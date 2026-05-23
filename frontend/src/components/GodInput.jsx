@@ -16,29 +16,36 @@ export default function GodInput({ onInject }) {
   };
 
   return (
-    <div className="bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+    <div className="bg-[#ff6b6b] rounded-[2rem] p-8 shadow-lg relative flex flex-col justify-between">
       
-      <h2 className="text-2xl font-black text-black mb-2 flex items-center uppercase tracking-tighter">
-        <Zap className="w-6 h-6 text-blue-600 mr-2" />
-        Policy Injector
-      </h2>
-      <p className="text-gray-500 text-sm mb-4 font-bold uppercase tracking-wider">Inject a macro-economic event into the simulation.</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <div className="bg-black/10 text-black/80 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">
+            God-Mode
+          </div>
+          <h2 className="text-3xl font-bold text-[#222] leading-tight">
+            INJECT POLICY
+          </h2>
+        </div>
+        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+          <Zap className="w-6 h-6 text-[#222]" />
+        </div>
+      </div>
       
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
         <textarea
           value={seed}
           onChange={(e) => setSeed(e.target.value)}
-          placeholder="e.g. The Federal Reserve just announced a surprise 0.75% rate hike..."
-          className="w-full bg-gray-50 border-2 border-gray-300 p-4 text-black font-mono placeholder-gray-400 focus:outline-none focus:border-black focus:ring-0 transition-all resize-none h-28"
+          placeholder="e.g. The Federal Reserve hikes rates by 1.5%..."
+          className="w-full bg-[#ff7f7f] text-[#222] placeholder-[#222]/50 focus:outline-none focus:bg-white/40 transition-all resize-none h-28 rounded-2xl p-5 text-lg font-medium shadow-inner"
         />
         <button 
           type="submit" 
           disabled={loading || !seed.trim()}
-          className="bg-black hover:bg-blue-600 text-white font-black py-3 px-4 flex items-center justify-center transition-colors disabled:opacity-50 disabled:hover:bg-black uppercase tracking-widest border-2 border-transparent hover:border-black"
+          className="bg-[#222] hover:bg-black text-white font-bold py-4 px-6 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-xl"
         >
-          {loading ? 'Injecting...' : 'Inject Event'}
-          <Send className="w-4 h-4 ml-2" />
+          {loading ? 'Initializing Protocol...' : 'Run Simulation'}
+          <Send className="w-5 h-5 ml-3" />
         </button>
       </form>
     </div>

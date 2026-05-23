@@ -58,29 +58,38 @@ export default function AgentNetwork({ messages }) {
   }, []);
 
   return (
-    <div className="bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative flex justify-center items-center h-[350px]">
-       <div className="absolute top-3 left-4 z-10 font-mono text-xs font-bold text-gray-400 tracking-widest">
-         [NETWORK_TOPOLOGY]
+    <div className="bg-[#4facfe] rounded-[2rem] shadow-lg relative flex flex-col justify-between h-full min-h-[400px] overflow-hidden">
+      
+      <div className="absolute top-6 left-6 z-10">
+        <div className="bg-black/10 text-black/80 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
+          Network
+        </div>
+        <h2 className="text-2xl font-bold text-[#222] leading-tight">
+          TOPOLOGY
+        </h2>
+      </div>
+
+       <div className="absolute inset-0 flex justify-center items-center mt-8">
+         <ForceGraph2D
+            ref={fgRef}
+            width={400}
+            height={400}
+            graphData={graphData}
+            nodeLabel="name"
+            nodeColor={node => node.id === 'God-Mode' ? '#ff6b6b' : '#222222'}
+            linkColor={() => 'rgba(255,255,255,0.2)'}
+            linkDirectionalParticles={0} 
+            linkDirectionalParticleWidth={5}
+            linkDirectionalParticleColor={link => {
+              const srcId = link.source.id || link.source;
+              return srcId === 'God-Mode' ? '#ff6b6b' : '#ffffff';
+            }}
+            linkDirectionalParticleSpeed={0.015}
+            backgroundColor="rgba(255,255,255,0)"
+            enableZoomInteraction={false}
+            enablePanInteraction={false}
+         />
        </div>
-       <ForceGraph2D
-          ref={fgRef}
-          width={350}
-          height={350}
-          graphData={graphData}
-          nodeLabel="name"
-          nodeColor={node => node.id === 'God-Mode' ? '#2563eb' : '#000000'}
-          linkColor={() => 'rgba(0,0,0,0.1)'}
-          linkDirectionalParticles={0} // We only emit particles manually
-          linkDirectionalParticleWidth={4}
-          linkDirectionalParticleColor={link => {
-            const srcId = link.source.id || link.source;
-            return srcId === 'God-Mode' ? '#2563eb' : '#dc2626';
-          }}
-          linkDirectionalParticleSpeed={0.015}
-          backgroundColor="rgba(255,255,255,1)"
-          enableZoomInteraction={false}
-          enablePanInteraction={false}
-       />
     </div>
   );
 }

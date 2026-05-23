@@ -14,78 +14,83 @@ export default function LiveSimulation({ messages }) {
 
   const getEmotionColor = (emotion) => {
     const e = emotion?.toLowerCase() || '';
-    if (['panicked', 'angry', 'aggressive'].includes(e)) return 'text-red-700 border-red-600 bg-white shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]';
-    if (['calculating', 'cold', 'analytical'].includes(e)) return 'text-blue-700 border-blue-600 bg-white shadow-[4px_4px_0px_0px_rgba(37,99,235,1)]';
-    if (['philosophical', 'peaceful', 'calm'].includes(e)) return 'text-emerald-700 border-emerald-600 bg-white shadow-[4px_4px_0px_0px_rgba(5,150,105,1)]';
-    if (['paranoid', 'terrified', 'suspicious'].includes(e)) return 'text-amber-700 border-amber-600 bg-white shadow-[4px_4px_0px_0px_rgba(217,119,6,1)]';
-    return 'text-black border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
+    if (['panicked', 'angry', 'aggressive'].includes(e)) return 'text-[#ff6b6b] bg-[#ff6b6b]/10';
+    if (['calculating', 'cold', 'analytical'].includes(e)) return 'text-[#4facfe] bg-[#4facfe]/10';
+    if (['philosophical', 'peaceful', 'calm'].includes(e)) return 'text-[#38b2ac] bg-[#38b2ac]/10';
+    if (['paranoid', 'terrified', 'suspicious'].includes(e)) return 'text-[#f6ad55] bg-[#f6ad55]/10';
+    return 'text-gray-300 bg-gray-700/50';
   };
 
   return (
-    <div className="bg-white border-2 border-black flex flex-col h-[800px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative">
+    <div className="bg-[#2d2d2d] rounded-[2rem] flex flex-col h-[800px] shadow-lg relative overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-100 px-4 py-3 border-b-2 border-black flex justify-between items-center">
-        <h2 className="text-black font-black flex items-center tracking-tighter text-xl uppercase">
-          <Terminal className="w-5 h-5 mr-2 text-blue-600" />
-          SYSTEM.LOG :: LIVE FEED
-        </h2>
+      <div className="px-8 py-6 flex justify-between items-center bg-[#2d2d2d] z-10 shadow-sm">
+        <div>
+          <div className="bg-white/10 text-white/80 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
+            Chat Log
+          </div>
+          <h2 className="text-2xl font-bold text-white flex items-center">
+            AI OPERATIONS LEAD
+          </h2>
+        </div>
         <div className="flex space-x-2">
-          <span className="w-3 h-3 rounded-none bg-red-500 border border-black"></span>
-          <span className="w-3 h-3 rounded-none bg-amber-500 border border-black"></span>
-          <span className="w-3 h-3 rounded-none bg-emerald-500 border border-black"></span>
+          <span className="w-3 h-3 rounded-full bg-[#ff6b6b]"></span>
+          <span className="w-3 h-3 rounded-full bg-[#f6ad55]"></span>
+          <span className="w-3 h-3 rounded-full bg-[#4facfe]"></span>
         </div>
       </div>
 
       {/* Feed Area */}
-      <div ref={feedRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+      <div ref={feedRef} className="flex-1 overflow-y-auto px-8 pb-8 space-y-6 scroll-smooth">
         <AnimatePresence>
           {messages.map((msg, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-5 border-2 ${msg.type === 'world_event' ? 'bg-blue-50 border-blue-600 shadow-[4px_4px_0px_0px_rgba(37,99,235,1)]' : msg.type === 'system_command' ? 'bg-red-50 border-red-600 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] text-red-700' : getEmotionColor(msg.emotion)}`}
+              className={`${msg.type === 'world_event' ? 'bg-[#ff6b6b]/10 rounded-3xl p-6 border border-[#ff6b6b]/30' : msg.type === 'system_command' ? 'bg-[#ff6b6b] rounded-3xl p-6 shadow-lg' : 'bg-[#3b3b3b] rounded-3xl p-6'}`}
             >
               {msg.type === 'world_event' ? (
                 // God Mode Event
                 <div>
-                  <div className="text-blue-600 font-black mb-2 flex items-center text-sm tracking-widest uppercase">
+                  <div className="text-[#ff6b6b] font-bold mb-2 flex items-center text-sm tracking-wider uppercase">
                     <AlertCircle className="w-5 h-5 mr-2" />
-                    [MACRO-ECONOMIC EVENT]
+                    Macro-Economic Event
                   </div>
-                  <div className="text-xl text-black font-bold">
+                  <div className="text-xl text-white font-medium">
                     {msg.content}
                   </div>
                 </div>
               ) : msg.type === 'system_command' ? (
                 // System Command (Moderator)
-                <div className="flex flex-col items-center justify-center p-4">
-                  <div className="text-red-600 font-black mb-1 flex items-center text-xl tracking-widest uppercase animate-pulse">
-                    <AlertCircle className="w-8 h-8 mr-2" />
-                    [SYSTEM OVERRIDE]
+                <div className="flex flex-col items-center justify-center py-2">
+                  <div className="text-[#222] font-black mb-1 flex items-center text-lg tracking-widest uppercase">
+                    <AlertCircle className="w-6 h-6 mr-2" />
+                    System Override
                   </div>
-                  <div className="text-2xl text-red-700 font-black text-center mt-2">
+                  <div className="text-2xl text-[#222] font-black text-center mt-1">
                     {msg.content}
                   </div>
                 </div>
               ) : (
                 // Agent Speech & Thought
                 <div>
-                  <div className="flex items-center justify-between mb-3 pb-3 border-b-2 border-inherit">
-                    <div className="font-black flex items-center text-lg tracking-tight uppercase text-black">
-                      <Cpu className="w-5 h-5 mr-2 opacity-70" />
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="font-bold flex items-center text-lg text-white">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mr-3">
+                        <User className="w-4 h-4 text-white/70" />
+                      </div>
                       {msg.sender}
                     </div>
-                    <div className="text-xs uppercase tracking-widest px-3 py-1 bg-black text-white font-bold">
+                    <div className={`text-xs uppercase tracking-wider px-3 py-1 rounded-full font-bold ${getEmotionColor(msg.emotion)}`}>
                       {msg.emotion}
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="text-sm italic border-l-4 border-inherit pl-4 text-gray-600 font-mono">
-                      <span className="block text-xs uppercase font-bold mb-1 tracking-widest">Internal Monologue</span>
+                  <div className="space-y-4 ml-11">
+                    <div className="text-sm italic border-l-2 border-white/10 pl-4 text-gray-400 font-serif">
                       {msg.thought}
                     </div>
-                    <div className="text-lg text-black font-medium">
+                    <div className="text-[1.05rem] text-white/90 leading-relaxed">
                       {msg.content}
                     </div>
                   </div>
