@@ -72,7 +72,7 @@ function App() {
               <SentimentDashboard messages={messages} />
             </div>
             <div className="shrink-0">
-              <GodInput onInject={handleInjectSeed} />
+              <GodInput onInject={handleInjectSeed} messages={messages} />
             </div>
           </div>
 
