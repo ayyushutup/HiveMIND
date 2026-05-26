@@ -173,10 +173,16 @@ async def autopilot_loop():
     indices = list(range(len(WORLD_EVENTS_POOL)))
     random.shuffle(indices)
     pool_cursor = 0
+    first_run = True
 
     while autopilot_state["running"]:
         interval = autopilot_state["interval"]
-        fire_at  = time.time() + interval
+        if first_run:
+            fire_at = time.time() + 3
+            first_run = False
+        else:
+            fire_at = time.time() + interval
+            
         autopilot_state["next_fire_at"] = fire_at
 
         # Broadcast countdown start so frontend ring can sync

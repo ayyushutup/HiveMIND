@@ -230,6 +230,7 @@ export default function GodInput({ onInject, messages }) {
           <div className="flex-1 flex flex-col gap-3">
             {/* Play/Pause button */}
             <motion.button
+              type="button"
               onClick={toggleAutopilot}
               whileTap={{ scale: 0.95 }}
               className="flex items-center justify-center gap-2 font-bold py-2.5 px-5 rounded-full border transition-all text-sm"
@@ -251,7 +252,8 @@ export default function GodInput({ onInject, messages }) {
                 type="range"
                 min={15} max={180} step={5}
                 value={interval}
-                onChange={e => handleIntervalChange(Number(e.target.value))}
+                onChange={e => setInterval_(Number(e.target.value))}
+                onPointerUp={e => handleIntervalChange(Number(e.target.value))}
                 className="flex-1 accent-[#38b2ac]"
               />
               <span className="font-mono font-bold text-sm w-10 text-right" style={{ color: '#38b2ac' }}>
