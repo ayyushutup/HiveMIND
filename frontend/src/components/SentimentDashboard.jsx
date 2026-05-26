@@ -224,7 +224,7 @@ export default function SentimentDashboard({ messages }) {
   useEffect(() => {
     fetch('/api/sentiment')
       .then(r => r.json())
-      .then(data => setAgents(data))
+      .then(data => { if (Array.isArray(data)) setAgents(data); })
       .catch(() => {});
   }, []);
 
@@ -264,14 +264,16 @@ export default function SentimentDashboard({ messages }) {
     const id = setInterval(() => {
       fetch('/api/sentiment')
         .then(r => r.json())
-        .then(data => setAgents(data))
+        .then(data => { if (Array.isArray(data)) setAgents(data); })
         .catch(() => {});
     }, 5000);
     return () => clearInterval(id);
   }, []);
 
-  // Sort by influence score descending
-  const sorted = [...agents].sort((a, b) => b.influence_score - a.influence_score);
+  // Sort by influence score descending (guard against non-array state)
+  const sorted = Array.isArray(agents)
+    ? [...agents].sort((a, b) => b.influence_score - a.influence_score)
+    : DEFAULT_STATE;
 
   return (
     <div className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-[2rem] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
