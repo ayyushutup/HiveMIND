@@ -6,7 +6,7 @@ brew services start redis
 # Activate python environment and set API Key
 source venv/bin/activate
 if [ -f .env ]; then
-  source .env
+  export $(grep -v '^#' .env | xargs)
 fi
 
 echo "Starting FastAPI Backend on port 8000..."

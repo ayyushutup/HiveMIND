@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import GodInput from './components/GodInput';
 import LiveSimulation from './components/LiveSimulation';
 import AgentNetwork from './components/AgentNetwork';
+import SentimentDashboard from './components/SentimentDashboard';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -22,7 +23,6 @@ function App() {
   }, []);
 
   const handleInjectSeed = async (seedText) => {
-    // Post to FastAPI backend
     try {
       await fetch('/api/inject_seed', {
         method: 'POST',
@@ -35,40 +35,53 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#222222] p-8 lg:p-12 flex flex-col font-sans text-gray-900 selection:bg-[#ff6b6b]/30">
+    <div className="min-h-screen w-full p-8 lg:p-12 flex flex-col font-sans text-white selection:bg-[#ff6b6b]/30">
       
-      {/* Soft Header */}
+      {/* Header */}
       <header className="mb-10 flex items-center justify-between px-2">
         <div>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-[#333333] rounded-full flex items-center justify-center shadow-inner">
-              <div className="w-5 h-5 bg-black rounded-full" />
+            <div className="w-10 h-10 backdrop-blur-xl bg-white/5 border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+              <div className="w-4 h-4 bg-white/80 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
             </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">
-                SharkFin<span className="text-gray-500 font-medium">_OS</span>
-              </h1>
-            </div>
-          </div>
-          <div className="bg-[#2d2d2d] px-6 py-3 rounded-full text-sm font-semibold text-gray-300 flex items-center shadow-inner">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-3"></span>
-            Macro-Economic Sandbox
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: God Input & Agent Status */}
-          <div className="lg:col-span-5 flex flex-col space-y-6">
-            <GodInput onInject={handleInjectSeed} />
-            <div className="flex-1 min-h-[400px]">
-              <AgentNetwork messages={messages} />
-            </div>
-          </div>
-
-          {/* Right Column: Live Feed */}
-          <div className="lg:col-span-7">
-            <LiveSimulation messages={messages} />
+            <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">
+              SharkFin<span className="text-white/40 font-light">_OS</span>
+            </h1>
           </div>
         </div>
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 px-6 py-3 rounded-full text-sm font-semibold text-white/70 flex items-center shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-3 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+          Macro-Economic Sandbox
+        </div>
+      </header>
+
+      <div className="flex flex-col space-y-6 flex-1 pb-10">
+
+        {/* Top: Force Graph */}
+        <div className="h-[65vh] w-full">
+          <AgentNetwork messages={messages} />
+        </div>
+
+        {/* Bottom: 3-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+          {/* Left: Sentiment Dashboard + God Input */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <div className="flex-1">
+              <SentimentDashboard messages={messages} />
+            </div>
+            <div className="shrink-0">
+              <GodInput onInject={handleInjectSeed} />
+            </div>
+          </div>
+
+          {/* Right: Live Chat Feed */}
+          <div className="lg:col-span-8 h-[700px]">
+            <LiveSimulation messages={messages} />
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }

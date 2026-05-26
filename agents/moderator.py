@@ -21,6 +21,12 @@ class Moderator:
                     print("[Moderator] New world event detected. Resetting counter.")
                     self.current_count = 0
                     
+                elif data.get("type") == "system_config":
+                    config = data.get("config", {})
+                    if "max_rounds" in config:
+                        self.max_rounds = int(config["max_rounds"])
+                        print(f"[Moderator] Max rounds updated to {self.max_rounds}")
+                        
                 elif data.get("type") == "agent_speech":
                     self.current_count += 1
                     

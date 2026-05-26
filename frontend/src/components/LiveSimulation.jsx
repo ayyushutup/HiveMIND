@@ -14,29 +14,29 @@ export default function LiveSimulation({ messages }) {
 
   const getEmotionColor = (emotion) => {
     const e = emotion?.toLowerCase() || '';
-    if (['panicked', 'angry', 'aggressive'].includes(e)) return 'text-[#ff6b6b] bg-[#ff6b6b]/10';
-    if (['calculating', 'cold', 'analytical'].includes(e)) return 'text-[#4facfe] bg-[#4facfe]/10';
-    if (['philosophical', 'peaceful', 'calm'].includes(e)) return 'text-[#38b2ac] bg-[#38b2ac]/10';
-    if (['paranoid', 'terrified', 'suspicious'].includes(e)) return 'text-[#f6ad55] bg-[#f6ad55]/10';
-    return 'text-gray-300 bg-gray-700/50';
+    if (['panicked', 'angry', 'aggressive'].includes(e)) return 'text-[#ff6b6b] bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 shadow-[0_0_10px_rgba(255,107,107,0.2)]';
+    if (['calculating', 'cold', 'analytical'].includes(e)) return 'text-[#4facfe] bg-[#4facfe]/10 border border-[#4facfe]/30 shadow-[0_0_10px_rgba(79,172,254,0.2)]';
+    if (['philosophical', 'peaceful', 'calm'].includes(e)) return 'text-[#38b2ac] bg-[#38b2ac]/10 border border-[#38b2ac]/30 shadow-[0_0_10px_rgba(56,178,172,0.2)]';
+    if (['paranoid', 'terrified', 'suspicious'].includes(e)) return 'text-[#f6ad55] bg-[#f6ad55]/10 border border-[#f6ad55]/30 shadow-[0_0_10px_rgba(246,173,85,0.2)]';
+    return 'text-white/60 bg-white/5 border border-white/10';
   };
 
   return (
-    <div className="bg-[#2d2d2d] rounded-[2rem] flex flex-col h-[800px] shadow-lg relative overflow-hidden">
+    <div className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-[2rem] flex flex-col h-[800px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
       {/* Header */}
-      <div className="px-8 py-6 flex justify-between items-center bg-[#2d2d2d] z-10 shadow-sm">
+      <div className="px-8 py-6 flex justify-between items-center bg-black/20 border-b border-white/10 z-10 shadow-sm">
         <div>
-          <div className="bg-white/10 text-white/80 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
+          <div className="bg-white/5 border border-white/10 text-white/60 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
             Chat Log
           </div>
-          <h2 className="text-2xl font-bold text-white flex items-center">
+          <h2 className="text-2xl font-bold text-white flex items-center drop-shadow-md">
             AI OPERATIONS LEAD
           </h2>
         </div>
-        <div className="flex space-x-2">
-          <span className="w-3 h-3 rounded-full bg-[#ff6b6b]"></span>
-          <span className="w-3 h-3 rounded-full bg-[#f6ad55]"></span>
-          <span className="w-3 h-3 rounded-full bg-[#4facfe]"></span>
+        <div className="flex space-x-3">
+          <span className="w-3 h-3 rounded-full bg-[#ff6b6b] shadow-[0_0_8px_#ff6b6b]"></span>
+          <span className="w-3 h-3 rounded-full bg-[#f6ad55] shadow-[0_0_8px_#f6ad55]"></span>
+          <span className="w-3 h-3 rounded-full bg-[#4facfe] shadow-[0_0_8px_#4facfe]"></span>
         </div>
       </div>
 
@@ -48,16 +48,16 @@ export default function LiveSimulation({ messages }) {
               key={idx}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`${msg.type === 'world_event' ? 'bg-[#ff6b6b]/10 rounded-3xl p-6 border border-[#ff6b6b]/30' : msg.type === 'system_command' ? 'bg-[#ff6b6b] rounded-3xl p-6 shadow-lg' : 'bg-[#3b3b3b] rounded-3xl p-6'}`}
+              className={`${msg.type === 'world_event' ? 'backdrop-blur-md bg-[#ff6b6b]/10 rounded-3xl p-6 border border-[#ff6b6b]/50 shadow-[0_0_20px_rgba(255,107,107,0.2)]' : msg.type === 'system_command' ? 'backdrop-blur-md bg-[#ff6b6b]/20 rounded-3xl p-6 border border-[#ff6b6b] shadow-[0_0_30px_rgba(255,107,107,0.3)]' : 'backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-6 hover:bg-white/10 transition-colors'}`}
             >
               {msg.type === 'world_event' ? (
                 // God Mode Event
                 <div>
-                  <div className="text-[#ff6b6b] font-bold mb-2 flex items-center text-sm tracking-wider uppercase">
+                  <div className="text-[#ff6b6b] font-bold mb-2 flex items-center text-sm tracking-widest uppercase drop-shadow-[0_0_5px_#ff6b6b]">
                     <AlertCircle className="w-5 h-5 mr-2" />
                     Macro-Economic Event
                   </div>
-                  <div className="text-xl text-white font-medium">
+                  <div className="text-xl text-white font-medium drop-shadow-sm">
                     {msg.content}
                   </div>
                 </div>
