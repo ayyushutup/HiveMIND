@@ -96,7 +96,47 @@ def compute_price_tick(agent_name: str, emotion: str, influence_score: int) -> f
     r.lpush(MARKET_EVENTS_KEY, json.dumps(event_entry))
     r.ltrim(MARKET_EVENTS_KEY, 0, 4)
 
-    return new_price
+    return new_price, delta
+
+def execute_trade(agent_name: str, emotion: str, current_price: float):
+    """Execute a trade for an agent based on their sentiment."""
+    emotion = emotion.lower()
+    action_type = "hold"
+    pct = 0.0
+
+    if emotion in ["bullish", "euphoric", "excited"]:
+        action_type = "buy"
+        pct = 0.25
+    elif emotion in ["calculating", "analytical", "cold", "calm", "philosophical", "peaceful"]:
+        action_type = "buy"
+        pct = 0.10
+    elif emotion in ["panicked", "angry", "aggressive", "terrified"]:
+        action_type = "sell"
+        pct = 0.50
+    elif emotion in ["paranoid", "suspicious", "cynical", "pessimistic", "skeptical"]:
+        action_type = "sell"
+        pct = 0.25
+
+    if action_type == "hold":
+        return
+
+    port_key = f"hivemind:portfolio:{agent_name}"
+    
+    # Initialize if missing
+    if not r.exists(port_key):
+        r.hset(port_key, mapping={"cash": 100000.0, "position": 0.0})
+        
+    cash = float(r.hget(port_key, "cash") or 100000.0)
+    position = float(r.hget(port_key, "position") or 0.0)
+
+    if action_type == "buy" and cash > 0:
+        spend = cash * pct
+        units = spend / current_price
+        r.hset(port_key, mapping={"cash": cash - spend, "position": position + units})
+    elif action_type == "sell" and position > 0:
+        sell_units = position * pct
+        revenue = sell_units * current_price
+        r.hset(port_key, mapping={"cash": cash + revenue, "position": position - sell_units})
 
 def reset_market():
     """Reset market to base price on new world event."""
@@ -288,12 +328,15 @@ async def redis_listener():
                     agent_name = parsed.get("agent", "")
                     emotion    = parsed.get("emotion", "neutral")
                     influence  = int(parsed.get("influence_score", 0))
-                    new_price  = compute_price_tick(agent_name, emotion, influence)
+                    new_price, delta = compute_price_tick(agent_name, emotion, influence)
+
+                    # Execute trade at the new price
+                    execute_trade(agent_name, emotion, new_price)
 
                     market_tick_event = {
                         "type": "market_tick",
                         "price": round(new_price, 2),
-                        "delta": round(new_price - get_current_price(), 2),
+                        "delta": round(delta, 2),
                         "agent": agent_name,
                         "emotion": emotion,
                         "time": time.strftime("%H:%M:%S"),
@@ -377,12 +420,25 @@ def get_node_info(node_id: str):
 @app.get("/sentiment")
 def get_sentiment():
     result = []
+    current_price = get_current_price()
+    
     for name in AGENT_NAMES:
         sent_key = f"hivemind:sentiment:{name}"
         timeline_key = f"hivemind:timeline:{name}"
+        port_key = f"hivemind:portfolio:{name}"
+        
         state = r.hgetall(sent_key)
         raw_timeline = r.lrange(timeline_key, 0, 9)
         timeline = [json.loads(t) for t in raw_timeline]
+        
+        # Portfolio
+        if not r.exists(port_key):
+            r.hset(port_key, mapping={"cash": 100000.0, "position": 0.0})
+        cash = float(r.hget(port_key, "cash") or 100000.0)
+        position = float(r.hget(port_key, "position") or 0.0)
+        total_value = cash + (position * current_price)
+        pnl = total_value - 100000.0
+        
         result.append({
             "name": name,
             "current_emotion": state.get("current_emotion", "idle"),
@@ -390,6 +446,12 @@ def get_sentiment():
             "influence_score": int(state.get("influence_score", 0)),
             "last_updated": state.get("last_updated", "--:--:--"),
             "timeline": timeline,
+            "portfolio": {
+                "cash": cash,
+                "position": position,
+                "total_value": total_value,
+                "pnl": pnl
+            }
         })
     return result
 
