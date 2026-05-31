@@ -60,8 +60,12 @@ function App() {
           <AgentNetwork messages={messages} />
         </div>
 
-        {/* Row 2: Market Impact Chart — full width */}
-        <MarketChart messages={messages} />
+        {/* Row 2: Market Impact Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+          <MarketChart asset="TECH" messages={messages} />
+          <MarketChart asset="CRYPTO" messages={messages} />
+          <MarketChart asset="MACRO" messages={messages} />
+        </div>
 
         {/* Row 3: Sentiment + GodInput | Live Feed */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">

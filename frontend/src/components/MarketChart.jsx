@@ -40,7 +40,7 @@ function CustomTooltip({ active, payload }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function MarketChart({ messages }) {
+export default function MarketChart({ asset = "MACRO", messages }) {
   const [ticks, setTicks]         = useState([{ price: BASE_PRICE, time: '--:--', agent: 'System', emotion: 'neutral', delta: 0 }]);
   const [currentPrice, setCurrentPrice] = useState(BASE_PRICE);
   const [pctChange, setPctChange] = useState(0);
@@ -55,7 +55,8 @@ export default function MarketChart({ messages }) {
   useEffect(() => {
     fetch('/api/market_state')
       .then(r => r.json())
-      .then(data => {
+      .then(states => {
+        const data = states[asset] || {};
         if (data.ticks?.length) setTicks(data.ticks);
         setCurrentPrice(data.current_price ?? BASE_PRICE);
         setPctChange(data.pct_change ?? 0);
@@ -65,7 +66,7 @@ export default function MarketChart({ messages }) {
         prevPrice.current = data.current_price ?? BASE_PRICE;
       })
       .catch(() => {});
-  }, []);
+  }, [asset]);
 
   // ── React to WebSocket messages ───────────────────────────────────────────
   useEffect(() => {
@@ -85,7 +86,7 @@ export default function MarketChart({ messages }) {
       prevPrice.current = BASE_PRICE;
     }
 
-    if (last.type === 'market_tick') {
+    if (last.type === 'market_tick' && last.asset === asset) {
       const { price, delta, agent, emotion, time } = last;
       const newTick = { price, delta: delta ?? 0, agent, emotion, time };
 
@@ -133,9 +134,9 @@ export default function MarketChart({ messages }) {
         {/* Left: Label + current price */}
         <div className="flex items-center gap-6">
           <div>
-            <div className="text-white/40 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 mb-1">
+            <div className="text-white/40 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 mb-1">
               <Activity className="w-3 h-3" />
-              Sentiment Market Index
+              {asset} MARKET
             </div>
             <div className="flex items-baseline gap-3">
               <motion.div

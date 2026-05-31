@@ -60,7 +60,7 @@ const DEFAULT_STATE = [
   influence_score: 0,
   last_updated: '--:--:--',
   timeline: [],
-  portfolio: { cash: 100000, position: 0, total_value: 100000, pnl: 0 },
+  portfolio: { cash: 100000, positions: { TECH: 0, CRYPTO: 0, MACRO: 0 }, total_value: 100000, pnl: 0 },
 }));
 
 // ── Sparkline: mini row of emotion dots ───────────────────────────────────────
@@ -215,15 +215,17 @@ function AgentCard({ agent, flashKey }) {
 
       {/* Portfolio Info */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-        <div className="flex gap-3">
-          <div className="flex flex-col">
+        <div className="flex gap-2">
+          <div className="flex flex-col mr-2">
             <span className="text-white/30 text-[9px] uppercase tracking-widest font-bold">Cash</span>
-            <span className="text-white/80 text-xs font-mono">${(agent.portfolio?.cash ?? 100000).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <span className="text-white/80 text-xs font-mono">${(agent.portfolio?.cash ?? 100000).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-white/30 text-[9px] uppercase tracking-widest font-bold">Pos</span>
-            <span className="text-white/80 text-xs font-mono">{(agent.portfolio?.position ?? 0).toFixed(2)}</span>
-          </div>
+          {['TECH', 'CRYPTO', 'MACRO'].map(asset => (
+            <div key={asset} className="flex flex-col">
+              <span className="text-white/30 text-[9px] uppercase tracking-widest font-bold">{asset.slice(0, 3)}</span>
+              <span className="text-white/80 text-xs font-mono">{(agent.portfolio?.positions?.[asset] ?? 0).toFixed(1)}</span>
+            </div>
+          ))}
         </div>
         <div className="text-right flex flex-col">
           <span className="text-white font-bold text-sm leading-none mb-0.5 tracking-tight font-mono">
