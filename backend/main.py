@@ -27,11 +27,7 @@ AGENT_NAMES = [
 
 # ── Market engine constants ────────────────────────────────────────────────────
 BASE_PRICE = 100.0
-MARKET_PRICE_KEY = "hivemind:market:price"
-MARKET_TICKS_KEY = "hivemind:market:ticks"       # list of tick JSON objects
-MARKET_EVENTS_KEY = "hivemind:market:events"     # last 5 contributing events
-MARKET_BULL_KEY   = "hivemind:market:bull"       # running bull pressure sum
-MARKET_BEAR_KEY   = "hivemind:market:bear"       # running bear pressure sum
+ASSETS = ["TECH", "CRYPTO", "MACRO"]
 MAX_TICKS = 60
 
 EMOTION_BIAS = {
@@ -51,11 +47,11 @@ EMOTION_BIAS = {
     "bullish": 2.5, "euphoric": 2.8, "excited": 2.2,
 }
 
-def get_current_price() -> float:
-    val = r.get(MARKET_PRICE_KEY)
+def get_current_price(asset: str) -> float:
+    val = r.get(f"hivemind:market:{asset}:price")
     return float(val) if val else BASE_PRICE
 
-def compute_price_tick(agent_name: str, emotion: str, influence_score: int) -> float:
+def compute_price_tick(agent_name: str, emotion: str, influence_score: int, asset: str) -> float:
     """Compute new price given agent emotion and influence, update Redis."""
     bias = EMOTION_BIAS.get(emotion.lower(), 0.0)
     # Influence multiplier: each influence point adds 15% weight
@@ -63,17 +59,17 @@ def compute_price_tick(agent_name: str, emotion: str, influence_score: int) -> f
     noise = random.uniform(0.85, 1.15)
     delta = bias * multiplier * noise
 
-    current = get_current_price()
+    current = get_current_price(asset)
     new_price = max(0.1, current + delta)   # floor at 0.1
 
     # Persist new price
-    r.set(MARKET_PRICE_KEY, new_price)
+    r.set(f"hivemind:market:{asset}:price", new_price)
 
     # Add to bull/bear pressure accumulators
     if delta > 0:
-        r.incrbyfloat(MARKET_BULL_KEY, delta)
+        r.incrbyfloat(f"hivemind:market:{asset}:bull", delta)
     elif delta < 0:
-        r.incrbyfloat(MARKET_BEAR_KEY, abs(delta))
+        r.incrbyfloat(f"hivemind:market:{asset}:bear", abs(delta))
 
     # Record tick
     tick = {
@@ -82,9 +78,10 @@ def compute_price_tick(agent_name: str, emotion: str, influence_score: int) -> f
         "agent": agent_name,
         "emotion": emotion,
         "delta": round(delta, 2),
+        "asset": asset
     }
-    r.lpush(MARKET_TICKS_KEY, json.dumps(tick))
-    r.ltrim(MARKET_TICKS_KEY, 0, MAX_TICKS - 1)
+    r.lpush(f"hivemind:market:{asset}:ticks", json.dumps(tick))
+    r.ltrim(f"hivemind:market:{asset}:ticks", 0, MAX_TICKS - 1)
 
     # Record contributing event (last 5)
     event_entry = {
@@ -92,13 +89,14 @@ def compute_price_tick(agent_name: str, emotion: str, influence_score: int) -> f
         "emotion": emotion,
         "delta": round(delta, 2),
         "time": time.strftime("%H:%M:%S"),
+        "asset": asset
     }
-    r.lpush(MARKET_EVENTS_KEY, json.dumps(event_entry))
-    r.ltrim(MARKET_EVENTS_KEY, 0, 4)
+    r.lpush(f"hivemind:market:{asset}:events", json.dumps(event_entry))
+    r.ltrim(f"hivemind:market:{asset}:events", 0, 4)
 
     return new_price, delta
 
-def execute_trade(agent_name: str, emotion: str, current_price: float):
+def execute_trade(agent_name: str, emotion: str, current_price: float, asset: str):
     """Execute a trade for an agent based on their sentiment."""
     emotion = emotion.lower()
     action_type = "hold"
@@ -124,30 +122,32 @@ def execute_trade(agent_name: str, emotion: str, current_price: float):
     
     # Initialize if missing
     if not r.exists(port_key):
-        r.hset(port_key, mapping={"cash": 100000.0, "position": 0.0})
+        r.hset(port_key, mapping={"cash": 100000.0, "position_TECH": 0.0, "position_CRYPTO": 0.0, "position_MACRO": 0.0})
         
     cash = float(r.hget(port_key, "cash") or 100000.0)
-    position = float(r.hget(port_key, "position") or 0.0)
+    pos_key = f"position_{asset}"
+    position = float(r.hget(port_key, pos_key) or 0.0)
 
     if action_type == "buy" and cash > 0:
         spend = cash * pct
         units = spend / current_price
-        r.hset(port_key, mapping={"cash": cash - spend, "position": position + units})
+        r.hset(port_key, mapping={"cash": cash - spend, pos_key: position + units})
     elif action_type == "sell" and position > 0:
         sell_units = position * pct
         revenue = sell_units * current_price
-        r.hset(port_key, mapping={"cash": cash + revenue, "position": position - sell_units})
+        r.hset(port_key, mapping={"cash": cash + revenue, pos_key: position - sell_units})
 
 def reset_market():
     """Reset market to base price on new world event."""
-    r.set(MARKET_PRICE_KEY, BASE_PRICE)
-    r.delete(MARKET_TICKS_KEY)
-    r.delete(MARKET_EVENTS_KEY)
-    r.set(MARKET_BULL_KEY, 0)
-    r.set(MARKET_BEAR_KEY, 0)
-    # Seed with the opening tick
-    tick = {"price": BASE_PRICE, "time": time.strftime("%H:%M:%S"), "agent": "System", "emotion": "neutral", "delta": 0}
-    r.lpush(MARKET_TICKS_KEY, json.dumps(tick))
+    for asset in ASSETS:
+        r.set(f"hivemind:market:{asset}:price", BASE_PRICE)
+        r.delete(f"hivemind:market:{asset}:ticks")
+        r.delete(f"hivemind:market:{asset}:events")
+        r.set(f"hivemind:market:{asset}:bull", 0)
+        r.set(f"hivemind:market:{asset}:bear", 0)
+        # Seed with the opening tick
+        tick = {"price": BASE_PRICE, "time": time.strftime("%H:%M:%S"), "agent": "System", "emotion": "neutral", "delta": 0, "asset": asset}
+        r.lpush(f"hivemind:market:{asset}:ticks", json.dumps(tick))
 
 
 # ── Autopilot Engine ───────────────────────────────────────────────────────────
@@ -328,10 +328,14 @@ async def redis_listener():
                     agent_name = parsed.get("agent", "")
                     emotion    = parsed.get("emotion", "neutral")
                     influence  = int(parsed.get("influence_score", 0))
-                    new_price, delta = compute_price_tick(agent_name, emotion, influence)
+                    asset_focus = parsed.get("asset_focus", "MACRO")
+                    if asset_focus not in ASSETS:
+                        asset_focus = "MACRO"
+                        
+                    new_price, delta = compute_price_tick(agent_name, emotion, influence, asset_focus)
 
                     # Execute trade at the new price
-                    execute_trade(agent_name, emotion, new_price)
+                    execute_trade(agent_name, emotion, new_price, asset_focus)
 
                     market_tick_event = {
                         "type": "market_tick",
@@ -339,6 +343,7 @@ async def redis_listener():
                         "delta": round(delta, 2),
                         "agent": agent_name,
                         "emotion": emotion,
+                        "asset": asset_focus,
                         "time": time.strftime("%H:%M:%S"),
                     }
                     await manager.broadcast(market_tick_event)
@@ -420,7 +425,6 @@ def get_node_info(node_id: str):
 @app.get("/sentiment")
 def get_sentiment():
     result = []
-    current_price = get_current_price()
     
     for name in AGENT_NAMES:
         sent_key = f"hivemind:sentiment:{name}"
@@ -433,10 +437,16 @@ def get_sentiment():
         
         # Portfolio
         if not r.exists(port_key):
-            r.hset(port_key, mapping={"cash": 100000.0, "position": 0.0})
+            r.hset(port_key, mapping={"cash": 100000.0, "position_TECH": 0.0, "position_CRYPTO": 0.0, "position_MACRO": 0.0})
         cash = float(r.hget(port_key, "cash") or 100000.0)
-        position = float(r.hget(port_key, "position") or 0.0)
-        total_value = cash + (position * current_price)
+        
+        positions = {}
+        total_value = cash
+        for asset in ASSETS:
+            pos = float(r.hget(port_key, f"position_{asset}") or 0.0)
+            positions[asset] = pos
+            total_value += pos * get_current_price(asset)
+            
         pnl = total_value - 100000.0
         
         result.append({
@@ -448,7 +458,7 @@ def get_sentiment():
             "timeline": timeline,
             "portfolio": {
                 "cash": cash,
-                "position": position,
+                "positions": positions,
                 "total_value": total_value,
                 "pnl": pnl
             }
@@ -466,24 +476,27 @@ def get_agent_memory(agent_name: str):
 
 @app.get("/market_state")
 def get_market_state():
-    current_price = get_current_price()
-    pct_change = ((current_price - BASE_PRICE) / BASE_PRICE) * 100
-    raw_ticks  = r.lrange(MARKET_TICKS_KEY, 0, MAX_TICKS - 1)
-    raw_events = r.lrange(MARKET_EVENTS_KEY, 0, 4)
-    ticks  = [json.loads(t) for t in raw_ticks]
-    events = [json.loads(e) for e in raw_events]
-    ticks_chrono = list(reversed(ticks))
-    bull = float(r.get(MARKET_BULL_KEY) or 0)
-    bear = float(r.get(MARKET_BEAR_KEY) or 0)
-    return {
-        "current_price": round(current_price, 2),
-        "base_price": BASE_PRICE,
-        "pct_change": round(pct_change, 2),
-        "bull_pressure": round(bull, 2),
-        "bear_pressure": round(bear, 2),
-        "ticks": ticks_chrono,
-        "recent_events": events,
-    }
+    states = {}
+    for asset in ASSETS:
+        current_price = get_current_price(asset)
+        pct_change = ((current_price - BASE_PRICE) / BASE_PRICE) * 100
+        raw_ticks  = r.lrange(f"hivemind:market:{asset}:ticks", 0, MAX_TICKS - 1)
+        raw_events = r.lrange(f"hivemind:market:{asset}:events", 0, 4)
+        ticks  = [json.loads(t) for t in raw_ticks]
+        events = [json.loads(e) for e in raw_events]
+        ticks_chrono = list(reversed(ticks))
+        bull = float(r.get(f"hivemind:market:{asset}:bull") or 0)
+        bear = float(r.get(f"hivemind:market:{asset}:bear") or 0)
+        states[asset] = {
+            "current_price": round(current_price, 2),
+            "base_price": BASE_PRICE,
+            "pct_change": round(pct_change, 2),
+            "bull_pressure": round(bull, 2),
+            "bear_pressure": round(bear, 2),
+            "ticks": ticks_chrono,
+            "recent_events": events,
+        }
+    return states
 
 # ── Autopilot endpoints ───────────────────────────────────────────────────────
 
