@@ -39,7 +39,8 @@ class BaseAgent:
             "{\n"
             '  "thought": "your internal monologue assessing the situation",\n'
             '  "speech": "what you say out loud. If you agree and have nothing new to add, output strictly \'SILENT\'",\n'
-            '  "emotion": "a single word describing your current emotion (e.g., panicked, calculating, aggressive, cynical)"\n'
+            '  "emotion": "a single word describing your current emotion (e.g., panicked, calculating, aggressive, cynical)",\n'
+            '  "asset_focus": "the primary asset you are focusing on (choose exactly one: TECH, CRYPTO, MACRO)"\n'
             "}"
         )
 
@@ -57,13 +58,14 @@ class BaseAgent:
                 trigger = m.get("trigger", "")
                 speech = m.get("speech", "")
                 emotion = m.get("emotion", "")
-                lines.append(f"[{ts}] You felt {emotion}. In response to: \"{trigger[:80]}...\" — You said: \"{speech[:120]}...\"")
+                asset = m.get("asset_focus", "MACRO")
+                lines.append(f"[{ts}] You felt {emotion} about {asset}. In response to: \"{trigger[:80]}...\" — You said: \"{speech[:120]}...\"")
             lines.append("--- END MEMORY ---")
             return "\n".join(lines)
         except Exception:
             return ""
 
-    def update_memory(self, trigger: str, speech: str, emotion: str):
+    def update_memory(self, trigger: str, speech: str, emotion: str, asset_focus: str = "MACRO"):
         """Persist a memory item to Redis and update the agent's sentiment state."""
         # 1. Push to episodic memory list
         mem_key = MEMORY_KEY.format(name=self.name)
@@ -72,6 +74,7 @@ class BaseAgent:
             "trigger": trigger[:200],
             "speech": speech[:300],
             "emotion": emotion,
+            "asset_focus": asset_focus,
         }
         self.r.lpush(mem_key, json.dumps(memory_item))
         self.r.ltrim(mem_key, 0, MAX_MEMORY_ITEMS - 1)  # Keep only last N

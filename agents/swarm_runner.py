@@ -70,11 +70,12 @@ def listen_and_react(agent):
                 
                 speech = parsed_response.get("speech", "")
                 emotion = parsed_response.get("emotion", "neutral")
+                asset_focus = parsed_response.get("asset_focus", "MACRO")
 
                 if speech != "SILENT":
                     # --- Persist memory and update sentiment ---
                     trigger_summary = data.get('content', '')[:200]
-                    agent.update_memory(trigger=trigger_summary, speech=speech, emotion=emotion)
+                    agent.update_memory(trigger=trigger_summary, speech=speech, emotion=emotion, asset_focus=asset_focus)
 
                     # --- Influence scoring: check if this speech mentions another agent ---
                     for other_agent in agents:
@@ -87,7 +88,8 @@ def listen_and_react(agent):
                         "sender": agent.name,
                         "content": speech,
                         "thought": parsed_response.get("thought", ""),
-                        "emotion": emotion
+                        "emotion": emotion,
+                        "asset_focus": asset_focus
                     }
                     r.publish('hivemind.events', json.dumps(event))
 
@@ -99,6 +101,7 @@ def listen_and_react(agent):
                         "agent": agent.name,
                         "emotion": emotion,
                         "influence_score": influence,
+                        "asset_focus": asset_focus
                     }
                     r.publish('hivemind.events', json.dumps(sentiment_event))
             except Exception as e:
