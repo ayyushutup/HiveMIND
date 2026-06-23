@@ -1,3 +1,7 @@
+"""
+Standalone test script to verify basic Groq API connectivity.
+Sends a single prompt to a HiveMind node.
+"""
 import os
 from groq import Groq
 

@@ -1,3 +1,8 @@
+"""
+Demonstrates a multi-agent debate loop.
+Spawns two agents (a Planner and a Critic) that argue over an initial idea
+and refine it through multiple rounds of interaction.
+"""
 import os
 from groq import Groq
 from agent import Agent  # This imports the class we built in Lesson 2!

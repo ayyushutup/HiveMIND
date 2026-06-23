@@ -1,3 +1,8 @@
+"""
+Speaker component of HiveMind.
+Takes a user-provided idea from the command line and broadcasts it
+to the 'hivemind.ideas' Redis Pub/Sub channel.
+"""
 import redis
 import sys
 

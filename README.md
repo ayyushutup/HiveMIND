@@ -1,30 +1,57 @@
 # HiveMind
 
-A multi-agent architecture project designed for complex task resolution through intelligent agent collaboration. Or, in simpler terms, a bunch of bots talking to each other because humans are too slow and complain too much. 
+A multi-agent architecture project designed for complex task resolution through intelligent agent collaboration. HiveMind leverages Groq-hosted LLMs and a Redis-backed pub/sub system to orchestrate discussions, debates, and task execution among multiple AI agents.
+
+## Features
+
+- **Agent Framework**: Core `Agent` class that integrates seamlessly with Groq API.
+- **Debate Simulation**: Agents (e.g., Planner and Critic) can iteratively discuss and refine ideas.
+- **Event-Driven Architecture**: Uses Redis Pub/Sub to allow agents to communicate asynchronously across different processes (`speaker.py` and `listener.py`).
+- **Fast Inference**: Built on Groq's low-latency API to power rapid multi-agent interactions.
 
 ## Tech Stack
 
-Because we love overengineering, here's what powers this beautiful mess:
-- **Python**: Obviously. The duct tape of the internet.
-- **Redis**: For when the agents need a memory span longer than a goldfish.
-- **Some LLMs**: Taking all our jobs, one token at a time.
+- **Python**: Core programming language.
+- **Redis**: Used as an event bus to enable scalable communication between agents.
+- **Groq API**: High-speed LLM inference provider (using models like `llama-3.3-70b-versatile`).
 
-## How it Works (Sort of)
+## Project Structure
 
-1. You give it a task that's way too complex for a single prompt.
-2. The `Speaker` starts yelling at the `Listener`.
-3. The `Debate` ensues, where agents argue until they reach consensus (or hit the rate limit).
-4. Magic happens in the `Brain`, and eventually, a semi-coherent output is spat out. 
-5. If it fails, blame the LLM provider.
+- `agent.py`: Defines the foundational `Agent` class for sending prompts to the LLM.
+- `brain.py`: A standalone test script to verify basic Groq API connectivity.
+- `debate.py`: A demonstration of an iterative debate loop between a Planner and Critic agent.
+- `speaker.py`: A script that broadcasts user-provided ideas onto the Redis event bus.
+- `listener.py`: A script that subscribes to the Redis event bus and evaluates incoming ideas using a Critic agent.
+- `start.sh`: Shell script to initialize the project environment.
 
 ## Installation
 
-1. Clone the repository (if you have the bandwidth)
-2. Run `./start.sh` to initialize the environment and hope it doesn't break your system.
+1. Clone the repository.
+2. Make sure you have Redis installed and running locally on port 6379.
+3. Obtain a Groq API Key and ensure the `GROQ_API_KEY` environment variable is set.
+4. Run `./start.sh` to initialize the environment and install dependencies.
 
 ## Usage
 
-To start the agentic system, run the main agent script and watch the magic (or chaos) unfold:
+You can test different parts of the system depending on what behavior you want to observe:
+
+**To test basic API connectivity:**
 ```bash
-python agent.py
+python brain.py
+```
+
+**To run a simulated debate between agents:**
+```bash
+python debate.py
+```
+
+**To run the event-driven system:**
+Start the listener in one terminal:
+```bash
+python listener.py
+```
+
+And broadcast an idea using the speaker in another terminal:
+```bash
+python speaker.py "Let's build a flying car."
 ```

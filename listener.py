@@ -1,3 +1,8 @@
+"""
+Listener component of HiveMind.
+Subscribes to a Redis Pub/Sub channel and uses a CriticAgent
+to evaluate any incoming ideas on the event bus.
+"""
 import os
 import redis
 from agent import Agent
