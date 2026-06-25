@@ -121,29 +121,32 @@ function AgentCard({ agent, flashKey }) {
       layout
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.3 }}
-      className="relative rounded-2xl border p-4 overflow-hidden"
+      className="relative rounded-2xl border p-4 overflow-hidden glass-panel group"
       style={{
-        borderColor: isActive ? style.color + '55' : 'rgba(255,255,255,0.08)',
+        borderColor: isActive ? style.color + '55' : 'rgba(255,255,255,0.05)',
         background: isActive
-          ? `linear-gradient(135deg, ${style.color}0d 0%, rgba(0,0,0,0.3) 100%)`
-          : 'rgba(255,255,255,0.03)',
-        boxShadow: isActive ? `0 0 20px ${style.glow}` : 'none',
+          ? `linear-gradient(135deg, ${style.color}15 0%, rgba(0,0,0,0.4) 100%)`
+          : 'rgba(255,255,255,0.02)',
+        boxShadow: isActive ? `0 8px 32px ${style.glow}` : '0 4px 20px rgba(0,0,0,0.2)',
         transition: 'box-shadow 0.5s, border-color 0.5s, background 0.5s',
       }}
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       {/* Top row: Avatar + Name + Framework badge */}
       <div className="flex items-center gap-3 mb-3">
         {/* Avatar */}
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shrink-0"
+          className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-sm shrink-0 shadow-lg relative overflow-hidden"
           style={{
             backgroundColor: style.color + '22',
-            border: `2px solid ${style.color}88`,
+            border: `1px solid ${style.color}66`,
             color: style.color,
-            boxShadow: isActive ? `0 0 10px ${style.glow}` : 'none',
+            boxShadow: isActive ? `0 0 15px ${style.glow}, inset 0 0 10px ${style.color}22` : 'none',
           }}
         >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
           {initials}
         </div>
 
@@ -302,21 +305,15 @@ export default function SentimentDashboard({ messages }) {
     : DEFAULT_STATE;
 
   return (
-    <div className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-[2rem] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-5 flex justify-between items-center bg-black/20 border-b border-white/10">
-        <div>
-          <div className="bg-white/5 border border-white/10 text-white/60 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">
-            Live Tracking
-          </div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2 drop-shadow-md">
-            <BrainCircuit className="w-5 h-5 text-[#b794f4]" />
-            Agent Sentiment
-          </h2>
-        </div>
-        <div className="text-right">
-          <div className="text-white/40 text-xs uppercase tracking-wider">Sorted by</div>
-          <div className="text-[#f6e05e] text-sm font-bold">Influence ↓</div>
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-bold flex items-center gap-2 text-white/90">
+          <BrainCircuit className="w-5 h-5 text-[#b794f4]" />
+          Agent Collective
+        </h2>
+        <div className="text-[10px] uppercase tracking-widest font-bold text-white/30 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          Live Telemetry
         </div>
       </div>
 

@@ -120,13 +120,13 @@ export default function MarketChart({ asset = "MACRO", messages }) {
 
   return (
     <motion.div
-      className="relative w-full rounded-[2rem] border overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.6)]"
+      className="relative w-full rounded-3xl overflow-hidden glass-panel"
       animate={{
-        backgroundColor: isFlashing ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)',
-        borderColor: isFlashing ? 'rgba(255,255,255,0.5)' : (isUp ? '#38b2ac33' : '#ff6b6b33'),
+        backgroundColor: isFlashing ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.02)',
+        borderColor: isFlashing ? 'rgba(255,255,255,0.3)' : (isUp ? '#38b2ac44' : '#ff6b6b44'),
+        boxShadow: isUp ? '0 8px 32px rgba(56,178,172,0.1)' : '0 8px 32px rgba(255,107,107,0.1)'
       }}
-      transition={{ duration: 0.3 }}
-      style={{ backdropFilter: 'blur(24px)' }}
+      transition={{ duration: 0.4 }}
     >
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
