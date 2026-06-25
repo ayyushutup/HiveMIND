@@ -172,17 +172,17 @@ export default function GodInput({ onInject, messages }) {
 
   return (
     <motion.div
-      className="backdrop-blur-2xl border rounded-[2rem] p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative flex flex-col gap-5"
+      className="glass-panel rounded-3xl p-6 relative flex flex-col gap-5 overflow-hidden"
       animate={{
         borderColor: autopilot
           ? firePulse ? 'rgba(255,255,255,0.6)' : 'rgba(56,178,172,0.4)'
-          : 'rgba(255,255,255,0.1)',
-        backgroundColor: autopilot ? 'rgba(56,178,172,0.04)' : 'rgba(255,255,255,0.03)',
+          : 'rgba(255,255,255,0.05)',
+        backgroundColor: autopilot ? 'rgba(56,178,172,0.04)' : 'rgba(255,255,255,0.02)',
         boxShadow: autopilot
           ? firePulse
             ? '0 0 60px rgba(255,255,255,0.2)'
             : '0 0 40px rgba(56,178,172,0.15)'
-          : '0 0 50px rgba(0,0,0,0.5)',
+          : '0 8px 32px rgba(0,0,0,0.2)',
       }}
       transition={{ duration: 0.4 }}
     >
@@ -323,17 +323,19 @@ export default function GodInput({ onInject, messages }) {
           value={seed}
           onChange={e => setSeed(e.target.value)}
           placeholder="Inject world event (e.g. The Fed hikes rates by 75bps...)"
-          className="w-full bg-black/40 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-[#4facfe]/50 focus:bg-black/60 transition-all resize-none h-24 rounded-2xl p-4 text-sm font-medium shadow-inner"
+          className="w-full bg-black/40 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-[#b794f4]/50 focus:bg-black/60 focus:ring-1 focus:ring-[#b794f4]/30 transition-all resize-none h-24 rounded-2xl p-4 text-sm font-medium shadow-inner"
         />
 
-        <button
+        <motion.button
           type="submit"
           disabled={loading || !seed.trim()}
-          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95 disabled:opacity-40 disabled:active:scale-100 backdrop-blur-md text-sm"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="bg-gradient-to-r from-[#38b2ac]/20 to-[#b794f4]/20 hover:from-[#38b2ac]/30 hover:to-[#b794f4]/30 border border-white/10 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(183,148,244,0.3)] disabled:opacity-40 disabled:pointer-events-none backdrop-blur-md text-sm"
         >
           {loading ? 'Initializing...' : 'Run Simulation'}
           <Send className="w-4 h-4 ml-2" />
-        </button>
+        </motion.button>
       </form>
     </motion.div>
   );
