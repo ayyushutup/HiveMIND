@@ -204,6 +204,7 @@ autopilot_state = {
     "last_event": "",
     "task": None,            # asyncio.Task handle
     "pool_index": [],        # shuffled indices to avoid repeats
+    "dynamic": False,        # whether to use LLM for events
 }
 
 async def autopilot_loop():
@@ -245,11 +246,35 @@ async def autopilot_loop():
             return
 
         # Pick next event (cycle through shuffled pool without repeats)
-        if pool_cursor >= len(indices):
-            random.shuffle(indices)
-            pool_cursor = 0
-        event_text = WORLD_EVENTS_POOL[indices[pool_cursor]]
-        pool_cursor += 1
+        if autopilot_state.get("dynamic", False):
+            try:
+                import sys
+                import os
+                if ".." not in sys.path:
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+                from agent import Agent
+                generator = Agent("System", "You are an AI simulating global macroeconomic events.")
+                prompt = (
+                    f"The current market prices are: TECH {get_current_price('TECH'):.2f}, "
+                    f"CRYPTO {get_current_price('CRYPTO'):.2f}, MACRO {get_current_price('MACRO'):.2f}. "
+                    "Generate a single, bold, unexpected world event that would shock the markets. "
+                    "Do not include any pleasantries, just the event text."
+                )
+                event_text = await asyncio.to_thread(generator.think, prompt)
+                event_text = event_text.strip().replace('"', '')
+            except Exception as e:
+                print(f"[Autopilot] LLM Generation failed: {e}")
+                if pool_cursor >= len(indices):
+                    random.shuffle(indices)
+                    pool_cursor = 0
+                event_text = WORLD_EVENTS_POOL[indices[pool_cursor]]
+                pool_cursor += 1
+        else:
+            if pool_cursor >= len(indices):
+                random.shuffle(indices)
+                pool_cursor = 0
+            event_text = WORLD_EVENTS_POOL[indices[pool_cursor]]
+            pool_cursor += 1
 
         autopilot_state["last_event"] = event_text
         print(f"[Autopilot] Firing: {event_text[:60]}...")
@@ -503,10 +528,11 @@ def get_market_state():
 @app.post("/autopilot/start")
 async def autopilot_start(payload: dict):
     interval = int(payload.get("interval_seconds", 60))
-    interval = max(15, min(interval, 300))   # clamp 15s–5min
+    interval = max(10, min(interval, 300))   # clamp 10s–5min
 
     autopilot_state["interval"] = interval
     autopilot_state["running"]  = True
+    autopilot_state["dynamic"]  = payload.get("dynamic", False)
 
     # Cancel any existing task before creating a new one
     if autopilot_state["task"] and not autopilot_state["task"].done():
@@ -541,4 +567,25 @@ def autopilot_status():
         "seconds_remaining": seconds_remaining,
         "next_fire_at": autopilot_state["next_fire_at"],
         "last_event": autopilot_state["last_event"],
+        "dynamic": autopilot_state.get("dynamic", False),
     }
+
+@app.get("/network_graph")
+def network_graph():
+    nodes = []
+    links = []
+    
+    nodes.append({"id": "God-Mode", "name": "MACRO EVENT", "type": "System", "group": 0, "val": 6})
+    
+    for name in AGENT_NAMES:
+        sent_key = f"hivemind:sentiment:{name}"
+        influence = int(r.hget(sent_key, "influence_score") or 0)
+        nodes.append({"id": name, "name": name, "type": "Person", "group": 1, "val": 4 + (influence * 0.5)})
+        links.append({"source": "God-Mode", "target": name})
+
+    companies = ['TechCorp', 'MacroBank', 'CryptoExchange', 'HedgeFundX', 'GovtTreasury']
+    for c in companies:
+        nodes.append({"id": c, "name": c, "type": "Company", "group": 2, "val": 2})
+        links.append({"source": random.choice(AGENT_NAMES), "target": c})
+
+    return {"nodes": nodes, "links": links}
