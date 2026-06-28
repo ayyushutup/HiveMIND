@@ -32,53 +32,21 @@ export default function AgentNetwork({ messages }) {
     'Entity': '#a0aec0'
   };
 
-  const graphData = useMemo(() => {
-    const nodes = [];
-    const links = [];
+  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
 
-    const agents = ['The Regulator', 'The Whale', 'The Retail Mob', 'The CEO', 'The Crypto Maxi', 'The Doomer'];
-    agents.forEach(a => nodes.push({ id: a, name: a, type: 'Person', group: 1, val: 4 }));
-    nodes.push({ id: 'God-Mode', name: 'MACRO EVENT', type: 'System', group: 0, val: 6 });
-
-    const companies = ['TechCorp', 'MacroBank', 'CryptoExchange', 'RetailChain', 'HedgeFundX', 'Semiconductor Co', 'AI Startup', 'Real Estate Trust', 'Energy Giant', 'Social Media Inc'];
-    companies.forEach(c => nodes.push({ id: c, name: c, type: 'Company', group: 2, val: 2 }));
-
-    const govt = ['SEC', 'Federal Reserve', 'Treasury', 'Congress', 'European Union', 'FCA'];
-    govt.forEach(g => nodes.push({ id: g, name: g, type: 'GovernmentAgency', group: 3, val: 2.5 }));
-
-    const assets = ['Bitcoin', 'Ethereum', 'S&P 500', 'Gold', 'Bonds', 'Real Estate'];
-    assets.forEach(a => nodes.push({ id: a, name: a, type: 'Asset', group: 4, val: 2 }));
-
-    for(let i = 0; i < 70; i++) {
-        nodes.push({ id: `Entity_${i}`, name: `Entity ${i}`, type: 'Entity', group: 5, val: 1 });
-    }
-
-    // Connect Agents to God-Mode
-    agents.forEach(agent => {
-        links.push({ source: 'God-Mode', target: agent });
-    });
-
-    nodes.forEach(node => {
-        if(node.id === 'God-Mode' || agents.includes(node.id)) return;
-        const numLinks = Math.floor(Math.random() * 3) + 1;
-        for(let i=0; i<numLinks; i++) {
-            const target = nodes[Math.floor(Math.random() * nodes.length)];
-            if(target.id !== node.id) {
-                links.push({ source: node.id, target: target.id });
-            }
-        }
-    });
-
-    links.push({ source: 'The Regulator', target: 'SEC' });
-    links.push({ source: 'The Regulator', target: 'Federal Reserve' });
-    links.push({ source: 'The Whale', target: 'MacroBank' });
-    links.push({ source: 'The Whale', target: 'HedgeFundX' });
-    links.push({ source: 'The Crypto Maxi', target: 'Bitcoin' });
-    links.push({ source: 'The Crypto Maxi', target: 'CryptoExchange' });
-    links.push({ source: 'The CEO', target: 'TechCorp' });
-    links.push({ source: 'The Retail Mob', target: 'RetailChain' });
-
-    return { nodes, links };
+  useEffect(() => {
+    const fetchGraph = () => {
+      fetch('/api/network_graph')
+        .then(r => r.json())
+        .then(data => {
+          // If nodes have changed significantly, we update
+          setGraphData(data);
+        })
+        .catch(err => console.error("Failed to fetch network graph", err));
+    };
+    fetchGraph();
+    const interval = setInterval(fetchGraph, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
