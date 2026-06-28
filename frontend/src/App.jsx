@@ -4,6 +4,7 @@ import LiveSimulation from './components/LiveSimulation';
 import AgentNetwork from './components/AgentNetwork';
 import SentimentDashboard from './components/SentimentDashboard';
 import MarketChart from './components/MarketChart';
+import PortfolioTracker from './components/PortfolioTracker';
 import { motion } from 'framer-motion';
 
 const pageVariants = {
@@ -94,10 +95,13 @@ function App() {
         {/* Row 3: Sentiment + GodInput | Live Feed */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
 
-          {/* Left: Sentiment Dashboard + God Input */}
+          {/* Left: Sentiment Dashboard + Portfolio + God Input */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="flex-1 glass-panel rounded-3xl p-6">
+            <div className="flex-1 glass-panel rounded-3xl p-6 min-h-[400px]">
               <SentimentDashboard messages={messages} />
+            </div>
+            <div className="flex-1 glass-panel rounded-3xl p-0 min-h-[300px] overflow-hidden">
+              <PortfolioTracker />
             </div>
             <div className="shrink-0 glass-panel rounded-3xl p-6">
               <GodInput onInject={handleInjectSeed} messages={messages} />
