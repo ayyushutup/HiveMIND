@@ -66,6 +66,7 @@ export default function GodInput({ onInject, messages }) {
   const [interval, setInterval_]            = useState(60);
   const [secondsLeft, setSecondsLeft]       = useState(0);
   const [lastEvent, setLastEvent]           = useState('');
+  const [dynamic, setDynamic]               = useState(false);
   const [firePulse, setFirePulse]           = useState(false);
   const countdownRef = useRef(null);
   const nextFireAtRef = useRef(0);
@@ -78,6 +79,7 @@ export default function GodInput({ onInject, messages }) {
         setAutopilot(data.running);
         setInterval_(data.interval ?? 60);
         setLastEvent(data.last_event ?? '');
+        setDynamic(data.dynamic ?? false);
         if (data.running && data.next_fire_at) {
           nextFireAtRef.current = data.next_fire_at * 1000; // convert to ms
           const secs = Math.max(0, Math.round((data.next_fire_at * 1000 - Date.now()) / 1000));
@@ -133,11 +135,11 @@ export default function GodInput({ onInject, messages }) {
       await fetch('/api/autopilot/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interval_seconds: interval }),
+        body: JSON.stringify({ interval_seconds: interval, dynamic }),
       });
       setAutopilot(true);
     }
-  }, [autopilot, interval]);
+  }, [autopilot, interval, dynamic]);
 
   // Update interval on backend while running
   const handleIntervalChange = useCallback(async (newVal) => {
@@ -148,10 +150,22 @@ export default function GodInput({ onInject, messages }) {
       await fetch('/api/autopilot/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interval_seconds: newVal }),
+        body: JSON.stringify({ interval_seconds: newVal, dynamic }),
       });
     }
-  }, [autopilot]);
+  }, [autopilot, dynamic]);
+
+  const handleDynamicChange = useCallback(async (newVal) => {
+    setDynamic(newVal);
+    if (autopilot) {
+      await fetch('/api/autopilot/stop', { method: 'POST' });
+      await fetch('/api/autopilot/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interval_seconds: interval, dynamic: newVal }),
+      });
+    }
+  }, [autopilot, interval]);
 
   // ── Manual injection ──────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
@@ -246,19 +260,33 @@ export default function GodInput({ onInject, messages }) {
             </motion.button>
 
             {/* Interval slider */}
-            <div className="flex items-center gap-3">
-              <span className="text-white/40 text-xs whitespace-nowrap">Every</span>
-              <input
-                type="range"
-                min={15} max={180} step={5}
-                value={interval}
-                onChange={e => setInterval_(Number(e.target.value))}
-                onPointerUp={e => handleIntervalChange(Number(e.target.value))}
-                className="flex-1 accent-[#38b2ac]"
-              />
-              <span className="font-mono font-bold text-sm w-10 text-right" style={{ color: '#38b2ac' }}>
-                {interval}s
-              </span>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-white/40 text-xs whitespace-nowrap">Every</span>
+                <input
+                  type="range"
+                  min={10} max={180} step={5}
+                  value={interval}
+                  onChange={e => setInterval_(Number(e.target.value))}
+                  onPointerUp={e => handleIntervalChange(Number(e.target.value))}
+                  className="flex-1 accent-[#38b2ac]"
+                />
+                <span className="font-mono font-bold text-sm w-10 text-right" style={{ color: '#38b2ac' }}>
+                  {interval}s
+                </span>
+              </div>
+              
+              {/* Dynamic mode toggle */}
+              <div className="flex items-center justify-between gap-3 px-1">
+                <span className="text-white/40 text-xs whitespace-nowrap">Dynamic Events (LLM)</span>
+                <button 
+                  type="button" 
+                  onClick={() => handleDynamicChange(!dynamic)}
+                  className={`w-9 h-5 rounded-full relative transition-colors ${dynamic ? 'bg-[#38b2ac]' : 'bg-white/10'}`}
+                >
+                  <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-transform ${dynamic ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
