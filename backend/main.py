@@ -372,6 +372,34 @@ async def redis_listener():
                         "time": time.strftime("%H:%M:%S"),
                     }
                     await manager.broadcast(market_tick_event)
+                elif parsed.get("type") == "debate_conclusion":
+                    winner = parsed.get("winner", "")
+                    sentiment = parsed.get("sentiment", "neutral")
+                    asset = parsed.get("asset", "MACRO")
+                    if asset not in ASSETS:
+                        asset = "MACRO"
+                        
+                    if winner and winner != "No One":
+                        sent_key = f"hivemind:sentiment:{winner}"
+                        if r.exists(sent_key):
+                            # Massive influence boost for winning the debate
+                            r.hincrby(sent_key, "influence_score", 50)
+                            
+                        # Trigger a massive market tick based on their sentiment
+                        # We use 500 influence just to guarantee a big move
+                        new_price, delta = compute_price_tick(winner, sentiment, 500, asset)
+                        execute_trade(winner, sentiment, new_price, asset)
+                        
+                        market_tick_event = {
+                            "type": "market_tick",
+                            "price": round(new_price, 2),
+                            "delta": round(delta, 2),
+                            "agent": winner,
+                            "emotion": sentiment,
+                            "asset": asset,
+                            "time": time.strftime("%H:%M:%S"),
+                        }
+                        await manager.broadcast(market_tick_event)
                 # ─────────────────────────────────────────────────────────
 
                 await manager.broadcast(parsed)
