@@ -33,6 +33,8 @@ class Moderator:
                     # New scenario injected, reset the counter
                     print("[Moderator] New world event detected. Resetting counter.")
                     self.current_count = 0
+                    self.history = []
+                    self.history.append(f"[World Event]: {data.get('content', '')}")
                     
                 elif data.get("type") == "system_config":
                     config = data.get("config", {})
@@ -42,6 +44,9 @@ class Moderator:
                         
                 elif data.get("type") == "agent_speech":
                     self.current_count += 1
+                    sender = data.get("sender", "Unknown")
+                    content = data.get("content", "")
+                    self.history.append(f"[{sender}]: {content}")
                     
                     if self.current_count >= self.max_rounds:
                         print(f"[Moderator] Max rounds ({self.max_rounds}) reached. Stopping debate.")
