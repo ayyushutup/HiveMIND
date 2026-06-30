@@ -1,5 +1,7 @@
 import redis
 import json
+import re
+from agent import Agent
 
 class Moderator:
     def __init__(self, max_rounds=5):
@@ -7,6 +9,17 @@ class Moderator:
         self.current_count = 0
         self.r = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
 
+        self.history = []
+        self.judge = Agent(
+            name="Moderator",
+            role_description=(
+                "You are the impartial Moderator and Judge of a financial debate. "
+                "Your job is to read the debate history and declare a single definitive Winner. "
+                "The winner must be one of the agents who participated. "
+                "Respond strictly with a JSON object: "
+                '{"winner": "AgentName", "reason": "1 short sentence explaining why.", "winning_sentiment": "bullish or bearish", "asset": "TECH, CRYPTO, or MACRO"}'
+            )
+        )
     def listen(self):
         pubsub = self.r.pubsub()
         pubsub.subscribe('hivemind.events')
