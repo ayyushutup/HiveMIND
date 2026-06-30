@@ -8,7 +8,6 @@ class Moderator:
         self.max_rounds = max_rounds
         self.current_count = 0
         self.r = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
-
         self.history = []
         self.judge = Agent(
             name="Moderator",
@@ -20,6 +19,7 @@ class Moderator:
                 '{"winner": "AgentName", "reason": "1 short sentence explaining why.", "winning_sentiment": "bullish or bearish", "asset": "TECH, CRYPTO, or MACRO"}'
             )
         )
+
     def listen(self):
         pubsub = self.r.pubsub()
         pubsub.subscribe('hivemind.events')
@@ -49,13 +49,47 @@ class Moderator:
                     self.history.append(f"[{sender}]: {content}")
                     
                     if self.current_count >= self.max_rounds:
-                        print(f"[Moderator] Max rounds ({self.max_rounds}) reached. Stopping debate.")
-                        stop_event = {
-                            "type": "system_command",
-                            "action": "silence",
-                            "content": "DEBATE CONCLUDED. AWAITING NEXT SCENARIO."
-                        }
-                        self.r.publish('hivemind.events', json.dumps(stop_event))
+                        print(f"[Moderator] Max rounds ({self.max_rounds}) reached. Evaluating debate winner...")
+                        
+                        history_text = "\n".join(self.history)
+                        prompt = f"Here is the debate transcript:\n{history_text}\n\nWho won? Return only the JSON object."
+                        
+                        try:
+                            reply = self.judge.think(prompt)
+                            clean_reply = re.sub(r'```json\s*|\s*```', '', reply).strip()
+                            result = json.loads(clean_reply)
+                            
+                            winner = result.get("winner", "No One")
+                            reason = result.get("reason", "The debate was inconclusive.")
+                            sentiment = result.get("winning_sentiment", "neutral").lower()
+                            asset = result.get("asset", "MACRO").upper()
+                            
+                            conclusion_event = {
+                                "type": "debate_conclusion",
+                                "winner": winner,
+                                "reason": reason,
+                                "sentiment": sentiment,
+                                "asset": asset
+                            }
+                            
+                            stop_event = {
+                                "type": "system_command",
+                                "action": "silence",
+                                "content": f"DEBATE CONCLUDED. The winner is {winner}. {reason}"
+                            }
+                            
+                            self.r.publish('hivemind.events', json.dumps(conclusion_event))
+                            self.r.publish('hivemind.events', json.dumps(stop_event))
+                            
+                        except Exception as e:
+                            print(f"[Moderator] Failed to judge debate: {e}")
+                            stop_event = {
+                                "type": "system_command",
+                                "action": "silence",
+                                "content": "DEBATE CONCLUDED. AWAITING NEXT SCENARIO."
+                            }
+                            self.r.publish('hivemind.events', json.dumps(stop_event))
+
                         # Prevent multiple stop events from spamming
                         self.current_count = -9999 
 
