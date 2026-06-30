@@ -47,28 +47,35 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen w-full p-4 md:p-8 lg:p-12 flex flex-col font-sans text-white selection:bg-[#b794f4]/30 overflow-x-hidden">
+    <div className="min-h-screen w-full p-4 md:p-6 lg:p-8 flex flex-col font-sans text-white selection:bg-cyan-500/30 overflow-x-hidden relative z-10">
+      
+      {/* Background ambient glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-900/20 blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px] pointer-events-none z-0"></div>
 
       {/* Header */}
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="mb-10 flex flex-col md:flex-row items-center justify-between px-4 py-4 md:py-2 glass-panel rounded-2xl md:rounded-full gap-4"
+        className="mb-8 flex flex-col md:flex-row items-center justify-between px-6 py-4 glass-panel rounded-2xl md:rounded-3xl gap-4 relative z-10"
       >
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#38b2ac] to-[#b794f4] p-[1px] shadow-[0_0_20px_rgba(56,178,172,0.3)]">
-            <div className="w-full h-full bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 bg-white shadow-[0_0_10px_rgba(255,255,255,1)]" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }} />
+        <div className="flex items-center space-x-5">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[var(--color-brand-cyan)] to-[var(--color-brand-purple)] p-[2px] glow-accent">
+            <div className="w-full h-full bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center">
+              <div className="w-5 h-5 bg-white shadow-[0_0_15px_rgba(255,255,255,1)]" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }} />
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 drop-shadow-sm">
-            SharkFin<span className="font-light opacity-50">_OS</span>
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm">
+              SharkFin<span className="font-light text-gradient">_OS</span>
+            </h1>
+            <p className="text-xs text-gray-400 uppercase tracking-widest font-mono mt-0.5">Neural Market Engine v2.0</p>
+          </div>
         </div>
-        <div className="px-6 py-2.5 rounded-full text-sm font-medium tracking-wide text-[#38b2ac] flex items-center bg-[#38b2ac]/10 border border-[#38b2ac]/20 shadow-[inset_0_0_12px_rgba(56,178,172,0.1)]">
-          <span className="w-2 h-2 rounded-full bg-[#38b2ac] animate-pulse mr-3 shadow-[0_0_8px_rgba(56,178,172,0.8)]"></span>
-          Macro-Economic Sandbox
+        <div className="px-6 py-2.5 rounded-full text-sm font-semibold tracking-wide text-[var(--color-brand-cyan)] flex items-center bg-[var(--color-brand-cyan)]/10 border border-[var(--color-brand-cyan)]/30 shadow-[inset_0_0_12px_rgba(0,240,255,0.15)]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-brand-cyan)] animate-pulse mr-3 shadow-[0_0_10px_rgba(0,240,255,0.8)]"></span>
+          Live Simulation Active
         </div>
       </motion.header>
 
