@@ -63,7 +63,12 @@ def listen_and_react(agent):
             try:
                 # Format history for prompt
                 history_str = "\n".join([f"[{m.get('sender', 'World')}]: {m.get('content', '')}" for m in agent_history])
-                prompt = f"Recent events:\n{history_str}\n\nYou must now respond to the situation. Remember your persona."
+                prompt = (
+                    f"Recent events:\n{history_str}\n\n"
+                    "You must now respond to the situation. Remember your persona. "
+                    "CRITICAL DEBATE RULE: If another agent has spoken and you disagree with their perspective, you MUST call them out by name and directly rebut their logic. "
+                    "If you agree with them, mention them by name and build upon their argument. Make this a structured, fiery debate!"
+                )
                 
                 raw_response = agent.think(prompt)
                 parsed_response = json.loads(raw_response)
