@@ -12,7 +12,7 @@ function CountdownRing({ secondsRemaining, interval, isRunning, onFire }) {
     ? Math.max(0, secondsRemaining / interval)
     : 0;
   const dashOffset = CIRC * (1 - progress);
-  const color = isRunning ? '#38b2ac' : '#4a5568';
+  const color = isRunning ? 'var(--color-brand-cyan)' : '#4a5568';
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: SIZE, height: SIZE }}>
@@ -189,13 +189,13 @@ export default function GodInput({ onInject, messages }) {
       className="glass-panel rounded-3xl p-6 relative flex flex-col gap-5 overflow-hidden"
       animate={{
         borderColor: autopilot
-          ? firePulse ? 'rgba(255,255,255,0.6)' : 'rgba(56,178,172,0.4)'
+          ? firePulse ? 'rgba(255,255,255,0.6)' : 'rgba(0,240,255,0.4)'
           : 'rgba(255,255,255,0.05)',
-        backgroundColor: autopilot ? 'rgba(56,178,172,0.04)' : 'rgba(255,255,255,0.02)',
+        backgroundColor: autopilot ? 'rgba(0,240,255,0.04)' : 'var(--glass-bg)',
         boxShadow: autopilot
           ? firePulse
             ? '0 0 60px rgba(255,255,255,0.2)'
-            : '0 0 40px rgba(56,178,172,0.15)'
+            : '0 0 40px rgba(0,240,255,0.15)'
           : '0 8px 32px rgba(0,0,0,0.2)',
       }}
       transition={{ duration: 0.4 }}
@@ -211,7 +211,7 @@ export default function GodInput({ onInject, messages }) {
               exit={{ opacity: 0, y: 4 }}
               className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block border"
               style={autopilot
-                ? { backgroundColor: '#38b2ac18', color: '#38b2ac', borderColor: '#38b2ac44' }
+                ? { backgroundColor: 'rgba(0,240,255,0.1)', color: 'var(--color-brand-cyan)', borderColor: 'rgba(0,240,255,0.3)' }
                 : { backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.1)' }
               }
             >
@@ -249,7 +249,7 @@ export default function GodInput({ onInject, messages }) {
               whileTap={{ scale: 0.95 }}
               className="flex items-center justify-center gap-2 font-bold py-2.5 px-5 rounded-full border transition-all text-sm"
               style={autopilot
-                ? { backgroundColor: '#38b2ac22', borderColor: '#38b2ac66', color: '#38b2ac', boxShadow: '0 0 16px rgba(56,178,172,0.3)' }
+                ? { backgroundColor: 'rgba(0,240,255,0.15)', borderColor: 'rgba(0,240,255,0.4)', color: 'var(--color-brand-cyan)', boxShadow: '0 0 20px rgba(0,240,255,0.3)' }
                 : { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }
               }
             >
@@ -269,9 +269,9 @@ export default function GodInput({ onInject, messages }) {
                   value={interval}
                   onChange={e => setInterval_(Number(e.target.value))}
                   onPointerUp={e => handleIntervalChange(Number(e.target.value))}
-                  className="flex-1 accent-[#38b2ac]"
+                  className="flex-1 accent-[var(--color-brand-cyan)]"
                 />
-                <span className="font-mono font-bold text-sm w-10 text-right" style={{ color: '#38b2ac' }}>
+                <span className="font-mono font-bold text-sm w-10 text-right text-[var(--color-brand-cyan)]">
                   {interval}s
                 </span>
               </div>
@@ -282,7 +282,7 @@ export default function GodInput({ onInject, messages }) {
                 <button 
                   type="button" 
                   onClick={() => handleDynamicChange(!dynamic)}
-                  className={`w-9 h-5 rounded-full relative transition-colors ${dynamic ? 'bg-[#38b2ac]' : 'bg-white/10'}`}
+                  className={`w-9 h-5 rounded-full relative transition-colors ${dynamic ? 'bg-[var(--color-brand-cyan)] glow-accent' : 'bg-white/10'}`}
                 >
                   <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-transform ${dynamic ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
                 </button>
@@ -301,12 +301,12 @@ export default function GodInput({ onInject, messages }) {
               exit={{ opacity: 0 }}
               className="text-xs rounded-xl px-3 py-2 border leading-relaxed"
               style={{
-                backgroundColor: 'rgba(56,178,172,0.08)',
-                borderColor: '#38b2ac33',
-                color: 'rgba(255,255,255,0.5)',
+                backgroundColor: 'rgba(0,240,255,0.08)',
+                borderColor: 'rgba(0,240,255,0.3)',
+                color: 'rgba(255,255,255,0.7)',
               }}
             >
-              <span className="font-bold uppercase tracking-wider text-[#38b2ac] mr-2">Last:</span>
+              <span className="font-bold uppercase tracking-wider text-[var(--color-brand-cyan)] mr-2">Last:</span>
               {lastEvent.length > 90 ? lastEvent.slice(0, 87) + '…' : lastEvent}
             </motion.div>
           ) : (
@@ -351,7 +351,7 @@ export default function GodInput({ onInject, messages }) {
           value={seed}
           onChange={e => setSeed(e.target.value)}
           placeholder="Inject world event (e.g. The Fed hikes rates by 75bps...)"
-          className="w-full bg-black/40 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-[#b794f4]/50 focus:bg-black/60 focus:ring-1 focus:ring-[#b794f4]/30 transition-all resize-none h-24 rounded-2xl p-4 text-sm font-medium shadow-inner"
+          className="w-full bg-black/40 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-[var(--color-brand-purple)]/50 focus:bg-black/60 focus:ring-1 focus:ring-[var(--color-brand-purple)]/30 transition-all resize-none h-24 rounded-2xl p-4 text-sm font-medium shadow-inner"
         />
 
         <motion.button
@@ -359,7 +359,7 @@ export default function GodInput({ onInject, messages }) {
           disabled={loading || !seed.trim()}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="bg-gradient-to-r from-[#38b2ac]/20 to-[#b794f4]/20 hover:from-[#38b2ac]/30 hover:to-[#b794f4]/30 border border-white/10 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(183,148,244,0.3)] disabled:opacity-40 disabled:pointer-events-none backdrop-blur-md text-sm"
+          className="bg-gradient-to-r from-[var(--color-brand-cyan)]/20 to-[var(--color-brand-purple)]/20 hover:from-[var(--color-brand-cyan)]/30 hover:to-[var(--color-brand-purple)]/30 border border-white/10 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_var(--color-brand-purple)] disabled:opacity-40 disabled:pointer-events-none backdrop-blur-md text-sm group"
         >
           {loading ? 'Initializing...' : 'Run Simulation'}
           <Send className="w-4 h-4 ml-2" />
