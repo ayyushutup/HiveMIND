@@ -4,26 +4,26 @@ import { Zap, Link, Clock, BrainCircuit } from 'lucide-react';
 
 // ── Emotion → visual style mapping ────────────────────────────────────────────
 const EMOTION_STYLES = {
-  panicked:    { color: '#ff6b6b', label: 'Panicked',       glow: 'rgba(255,107,107,0.6)', intensity: 0.95 },
-  angry:       { color: '#ff6b6b', label: 'Angry',          glow: 'rgba(255,107,107,0.6)', intensity: 0.88 },
-  aggressive:  { color: '#ff6b6b', label: 'Aggressive',     glow: 'rgba(255,107,107,0.6)', intensity: 0.90 },
-  terrified:   { color: '#f6ad55', label: 'Terrified',      glow: 'rgba(246,173,85,0.6)',  intensity: 0.85 },
-  paranoid:    { color: '#f6ad55', label: 'Paranoid',       glow: 'rgba(246,173,85,0.6)',  intensity: 0.82 },
-  suspicious:  { color: '#f6ad55', label: 'Suspicious',     glow: 'rgba(246,173,85,0.6)',  intensity: 0.75 },
-  calculating: { color: '#4facfe', label: 'Calculating',    glow: 'rgba(79,172,254,0.6)',  intensity: 0.70 },
-  cold:        { color: '#4facfe', label: 'Cold',           glow: 'rgba(79,172,254,0.6)',  intensity: 0.65 },
-  analytical:  { color: '#4facfe', label: 'Analytical',     glow: 'rgba(79,172,254,0.6)',  intensity: 0.60 },
-  calm:        { color: '#38b2ac', label: 'Calm',           glow: 'rgba(56,178,172,0.6)',  intensity: 0.35 },
-  philosophical:{ color: '#38b2ac', label: 'Philosophical', glow: 'rgba(56,178,172,0.6)',  intensity: 0.30 },
-  peaceful:    { color: '#38b2ac', label: 'Peaceful',       glow: 'rgba(56,178,172,0.6)',  intensity: 0.25 },
-  cynical:     { color: '#718096', label: 'Cynical',        glow: 'rgba(113,128,150,0.6)', intensity: 0.55 },
-  pessimistic: { color: '#718096', label: 'Pessimistic',    glow: 'rgba(113,128,150,0.6)', intensity: 0.50 },
-  skeptical:   { color: '#718096', label: 'Skeptical',      glow: 'rgba(113,128,150,0.6)', intensity: 0.45 },
-  euphoric:    { color: '#b794f4', label: 'Euphoric',       glow: 'rgba(183,148,244,0.6)', intensity: 0.95 },
-  excited:     { color: '#b794f4', label: 'Excited',        glow: 'rgba(183,148,244,0.6)', intensity: 0.88 },
-  bullish:     { color: '#b794f4', label: 'Bullish',        glow: 'rgba(183,148,244,0.6)', intensity: 0.80 },
-  neutral:     { color: '#ffffff', label: 'Neutral',        glow: 'rgba(255,255,255,0.2)', intensity: 0.20 },
-  idle:        { color: '#4a5568', label: 'Idle',           glow: 'rgba(74,85,104,0.2)',   intensity: 0.00 },
+  panicked:    { color: '#ff0055', label: 'Panicked',       glow: 'rgba(255,0,85,0.8)', intensity: 0.95 },
+  angry:       { color: '#ff0055', label: 'Angry',          glow: 'rgba(255,0,85,0.7)', intensity: 0.88 },
+  aggressive:  { color: '#ff3377', label: 'Aggressive',     glow: 'rgba(255,51,119,0.7)', intensity: 0.90 },
+  terrified:   { color: '#ff8800', label: 'Terrified',      glow: 'rgba(255,136,0,0.7)',  intensity: 0.85 },
+  paranoid:    { color: '#ff8800', label: 'Paranoid',       glow: 'rgba(255,136,0,0.6)',  intensity: 0.82 },
+  suspicious:  { color: '#ffaa00', label: 'Suspicious',     glow: 'rgba(255,170,0,0.6)',  intensity: 0.75 },
+  calculating: { color: '#00c3ff', label: 'Calculating',    glow: 'rgba(0,195,255,0.6)',  intensity: 0.70 },
+  cold:        { color: '#00c3ff', label: 'Cold',           glow: 'rgba(0,195,255,0.6)',  intensity: 0.65 },
+  analytical:  { color: '#00f0ff', label: 'Analytical',     glow: 'rgba(0,240,255,0.6)',  intensity: 0.60 },
+  calm:        { color: '#00f0ff', label: 'Calm',           glow: 'rgba(0,240,255,0.5)',  intensity: 0.35 },
+  philosophical:{ color: '#bd00ff', label: 'Philosophical', glow: 'rgba(189,0,255,0.5)',  intensity: 0.30 },
+  peaceful:    { color: '#bd00ff', label: 'Peaceful',       glow: 'rgba(189,0,255,0.4)',  intensity: 0.25 },
+  cynical:     { color: '#8892b0', label: 'Cynical',        glow: 'rgba(136,146,176,0.5)', intensity: 0.55 },
+  pessimistic: { color: '#8892b0', label: 'Pessimistic',    glow: 'rgba(136,146,176,0.4)', intensity: 0.50 },
+  skeptical:   { color: '#a8b2d1', label: 'Skeptical',      glow: 'rgba(168,178,209,0.4)', intensity: 0.45 },
+  euphoric:    { color: '#bd00ff', label: 'Euphoric',       glow: 'rgba(189,0,255,0.8)', intensity: 0.95 },
+  excited:     { color: '#00f0ff', label: 'Excited',        glow: 'rgba(0,240,255,0.7)', intensity: 0.88 },
+  bullish:     { color: '#00f0ff', label: 'Bullish',        glow: 'rgba(0,240,255,0.8)', intensity: 0.80 },
+  neutral:     { color: '#ccd6f6', label: 'Neutral',        glow: 'rgba(204,214,246,0.2)', intensity: 0.20 },
+  idle:        { color: '#495670', label: 'Idle',           glow: 'rgba(73,86,112,0.1)',   intensity: 0.00 },
 };
 
 const getStyle = (emotion) =>
@@ -126,11 +126,8 @@ function AgentCard({ agent, flashKey }) {
       className="relative rounded-2xl border p-4 overflow-hidden glass-panel group"
       style={{
         borderColor: isActive ? style.color + '55' : 'rgba(255,255,255,0.05)',
-        background: isActive
-          ? `linear-gradient(135deg, ${style.color}15 0%, rgba(0,0,0,0.4) 100%)`
-          : 'rgba(255,255,255,0.02)',
         boxShadow: isActive ? `0 8px 32px ${style.glow}` : '0 4px 20px rgba(0,0,0,0.2)',
-        transition: 'box-shadow 0.5s, border-color 0.5s, background 0.5s',
+        transition: 'box-shadow 0.5s, border-color 0.5s',
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -179,8 +176,8 @@ function AgentCard({ agent, flashKey }) {
         {/* Influence score badge */}
         <div className="text-center shrink-0">
           <div
-            className="text-lg font-black"
-            style={{ color: agent.influence_score > 0 ? '#f6e05e' : '#4a5568' }}
+            className="text-lg font-black font-mono drop-shadow-md"
+            style={{ color: agent.influence_score > 0 ? 'var(--color-brand-cyan)' : '#4a5568' }}
           >
             {agent.influence_score}
           </div>
@@ -234,7 +231,7 @@ function AgentCard({ agent, flashKey }) {
           <span className="text-white font-bold text-sm leading-none mb-0.5 tracking-tight font-mono">
             ${(agent.portfolio?.total_value ?? 100000).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </span>
-          <span className={`text-[10px] font-bold tracking-wider font-mono ${(agent.portfolio?.pnl ?? 0) >= 0 ? 'text-[#38b2ac]' : 'text-[#ff6b6b]'}`}>
+          <span className={`text-[10px] font-bold tracking-wider font-mono ${(agent.portfolio?.pnl ?? 0) >= 0 ? 'text-[#00f0ff]' : 'text-[#ff0055]'}`}>
             {(agent.portfolio?.pnl ?? 0) >= 0 ? '+' : ''}{(agent.portfolio?.pnl ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </span>
         </div>
@@ -308,11 +305,11 @@ export default function SentimentDashboard({ messages }) {
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold flex items-center gap-2 text-white/90">
-          <BrainCircuit className="w-5 h-5 text-[#b794f4]" />
+          <BrainCircuit className="w-5 h-5 text-[var(--color-brand-cyan)]" />
           Agent Collective
         </h2>
-        <div className="text-[10px] uppercase tracking-widest font-bold text-white/30 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+        <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-brand-purple)] flex items-center gap-1.5 glow-accent px-3 py-1 rounded-full bg-[var(--color-brand-purple)]/10 border border-[var(--color-brand-purple)]/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-purple)] animate-pulse shadow-[0_0_8px_var(--color-brand-purple)]" />
           Live Telemetry
         </div>
       </div>

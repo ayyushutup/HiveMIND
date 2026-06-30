@@ -10,11 +10,11 @@ const BASE_PRICE = 100;
 
 // ── Emotion → color for contribution pills ────────────────────────────────────
 const DELTA_COLOR = (delta) => {
-  if (delta > 1.5)  return { text: '#38b2ac', bg: '#38b2ac18', border: '#38b2ac44' };
-  if (delta > 0)    return { text: '#68d391', bg: '#68d39118', border: '#68d39144' };
-  if (delta < -1.5) return { text: '#ff6b6b', bg: '#ff6b6b18', border: '#ff6b6b44' };
-  if (delta < 0)    return { text: '#fc8181', bg: '#fc818118', border: '#fc818144' };
-  return              { text: '#a0aec0', bg: '#a0aec018', border: '#a0aec044' };
+  if (delta > 1.5)  return { text: '#00f0ff', bg: 'rgba(0, 240, 255, 0.1)', border: 'rgba(0, 240, 255, 0.3)' };
+  if (delta > 0)    return { text: '#00c3ff', bg: 'rgba(0, 195, 255, 0.1)', border: 'rgba(0, 195, 255, 0.3)' };
+  if (delta < -1.5) return { text: '#ff0055', bg: 'rgba(255, 0, 85, 0.1)', border: 'rgba(255, 0, 85, 0.3)' };
+  if (delta < 0)    return { text: '#ff3377', bg: 'rgba(255, 51, 119, 0.1)', border: 'rgba(255, 51, 119, 0.3)' };
+  return              { text: '#a0aec0', bg: 'rgba(160, 174, 192, 0.1)', border: 'rgba(160, 174, 192, 0.3)' };
 };
 
 // ── Custom tooltip ────────────────────────────────────────────────────────────
@@ -25,12 +25,12 @@ function CustomTooltip({ active, payload }) {
   return (
     <div className="backdrop-blur-xl bg-black/80 border border-white/10 rounded-xl px-3 py-2 text-xs shadow-xl">
       <div className="text-white/50 mb-1">{d.time}</div>
-      <div className="font-mono font-bold text-lg" style={{ color: isUp ? '#38b2ac' : '#ff6b6b' }}>
+      <div className="font-mono font-bold text-lg" style={{ color: isUp ? '#00f0ff' : '#ff0055' }}>
         {d.price.toFixed(2)}
       </div>
       {d.agent && d.agent !== 'System' && (
         <div className="text-white/60 mt-1">
-          {d.agent} · <span style={{ color: isUp ? '#38b2ac' : '#ff6b6b' }}>
+          {d.agent} · <span style={{ color: isUp ? '#00f0ff' : '#ff0055' }}>
             {d.delta > 0 ? '+' : ''}{d.delta?.toFixed(2)}
           </span>
         </div>
@@ -113,7 +113,8 @@ export default function MarketChart({ asset = "MACRO", messages }) {
 
   // Derived state
   const isUp    = currentPrice >= BASE_PRICE;
-  const chartColor = isUp ? '#38b2ac' : '#ff6b6b';
+  const chartColor = isUp ? '#00f0ff' : '#ff0055';
+  const chartGlow = isUp ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)';
   const totalPressure = bull + bear;
   const bullPct = totalPressure > 0 ? (bull / totalPressure) * 100 : 50;
   const bearPct = 100 - bullPct;
@@ -122,9 +123,9 @@ export default function MarketChart({ asset = "MACRO", messages }) {
     <motion.div
       className="relative w-full rounded-3xl overflow-hidden glass-panel"
       animate={{
-        backgroundColor: isFlashing ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.02)',
-        borderColor: isFlashing ? 'rgba(255,255,255,0.3)' : (isUp ? '#38b2ac44' : '#ff6b6b44'),
-        boxShadow: isUp ? '0 8px 32px rgba(56,178,172,0.1)' : '0 8px 32px rgba(255,107,107,0.1)'
+        backgroundColor: isFlashing ? 'rgba(255,255,255,0.1)' : 'var(--glass-bg)',
+        borderColor: isFlashing ? 'rgba(255,255,255,0.3)' : (isUp ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 0, 85, 0.2)'),
+        boxShadow: isFlashing ? '0 0 40px rgba(255,255,255,0.2)' : `0 8px 32px ${chartGlow}`
       }}
       transition={{ duration: 0.4 }}
     >
@@ -165,19 +166,19 @@ export default function MarketChart({ asset = "MACRO", messages }) {
           {/* Bull / Bear pressure bar */}
           <div className="min-w-[160px]">
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
-              <span style={{ color: '#38b2ac' }}>Bull {bullPct.toFixed(0)}%</span>
-              <span style={{ color: '#ff6b6b' }}>{bearPct.toFixed(0)}% Bear</span>
+              <span style={{ color: '#00f0ff' }}>Bull {bullPct.toFixed(0)}%</span>
+              <span style={{ color: '#ff0055' }}>{bearPct.toFixed(0)}% Bear</span>
             </div>
             <div className="h-2 rounded-full bg-white/10 overflow-hidden flex">
               <motion.div
-                className="h-full rounded-l-full"
-                style={{ backgroundColor: '#38b2ac' }}
+                className="h-full rounded-l-full relative overflow-hidden"
+                style={{ backgroundColor: '#00f0ff', boxShadow: '0 0 10px #00f0ff' }}
                 animate={{ width: `${bullPct}%` }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               />
               <motion.div
-                className="h-full rounded-r-full"
-                style={{ backgroundColor: '#ff6b6b' }}
+                className="h-full rounded-r-full relative overflow-hidden"
+                style={{ backgroundColor: '#ff0055', boxShadow: '0 0 10px #ff0055' }}
                 animate={{ width: `${bearPct}%` }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               />
@@ -219,12 +220,12 @@ export default function MarketChart({ asset = "MACRO", messages }) {
           <AreaChart data={ticks} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="priceGradientUp" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#38b2ac" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#38b2ac" stopOpacity={0.02} />
+                <stop offset="5%"  stopColor="#00f0ff" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#00f0ff" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="priceGradientDown" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#ff6b6b" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#ff6b6b" stopOpacity={0.02} />
+                <stop offset="5%"  stopColor="#ff0055" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#ff0055" stopOpacity={0.0} />
               </linearGradient>
             </defs>
 
