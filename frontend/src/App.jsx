@@ -5,6 +5,8 @@ import AgentNetwork from './components/AgentNetwork';
 import SentimentDashboard from './components/SentimentDashboard';
 import MarketChart from './components/MarketChart';
 import PortfolioTracker from './components/PortfolioTracker';
+import FearAndGreedGauge from './components/FearAndGreedGauge';
+import TickerTape from './components/TickerTape';
 import { motion } from 'framer-motion';
 
 const pageVariants = {
@@ -73,11 +75,19 @@ function App() {
             <p className="text-xs text-gray-400 uppercase tracking-widest font-mono mt-0.5">Neural Market Engine v2.0</p>
           </div>
         </div>
-        <div className="px-6 py-2.5 rounded-full text-sm font-semibold tracking-wide text-[var(--color-brand-cyan)] flex items-center bg-[var(--color-brand-cyan)]/10 border border-[var(--color-brand-cyan)]/30 shadow-[inset_0_0_12px_rgba(0,240,255,0.15)]">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-brand-cyan)] animate-pulse mr-3 shadow-[0_0_10px_rgba(0,240,255,0.8)]"></span>
-          Live Simulation Active
+        <div className="flex items-center gap-6">
+          <FearAndGreedGauge messages={messages} />
+          <div className="px-6 py-2.5 rounded-full text-sm font-semibold tracking-wide text-[var(--color-brand-cyan)] flex items-center bg-[var(--color-brand-cyan)]/10 border border-[var(--color-brand-cyan)]/30 shadow-[inset_0_0_12px_rgba(0,240,255,0.15)]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-brand-cyan)] animate-pulse mr-3 shadow-[0_0_10px_rgba(0,240,255,0.8)]"></span>
+            Live Simulation Active
+          </div>
         </div>
       </motion.header>
+
+      {/* Ticker Tape - Full Width */}
+      <div className="-mx-4 md:-mx-6 lg:-mx-8 mb-8">
+        <TickerTape messages={messages} />
+      </div>
 
       <motion.div 
         variants={pageVariants}
