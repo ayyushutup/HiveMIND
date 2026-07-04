@@ -17,6 +17,7 @@ A multi-agent architecture project designed for complex task resolution through 
 
 ## Project Structure
 
+- `agents/`: Directory containing modular agents.
 - `backend/`: Directory containing backend services.
 - `frontend/`: Directory containing frontend UI applications.
 - `agent.py`: Defines the foundational `Agent` class for sending prompts to the LLM.
