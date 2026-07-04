@@ -17,6 +17,8 @@ A multi-agent architecture project designed for complex task resolution through 
 
 ## Project Structure
 
+- `backend/`: Directory containing backend services.
+- `frontend/`: Directory containing frontend UI applications.
 - `agent.py`: Defines the foundational `Agent` class for sending prompts to the LLM.
 - `brain.py`: A standalone test script to verify basic Groq API connectivity.
 - `debate.py`: A demonstration of an iterative debate loop between a Planner and Critic agent.
