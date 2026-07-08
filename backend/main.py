@@ -20,10 +20,13 @@ app.add_middleware(
 # Connect to Redis
 r = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
 
-AGENT_NAMES = [
-    "The Regulator", "The Whale", "The Retail Mob",
-    "The CEO", "The Crypto Maxi", "The Doomer"
-]
+def get_agent_names():
+    mode = r.get("hivemind:mode") or "macro"
+    if mode == "red_team":
+        return ["The CFO", "The Legal Officer", "The Risk & Security Officer", "The Competitor", "The Customer Advocate"]
+    return ["The Regulator", "The Whale", "The Retail Mob", "The CEO", "The Crypto Maxi", "The Doomer"]
+
+AGENT_NAMES = get_agent_names()
 
 # ── Market engine constants ────────────────────────────────────────────────────
 BASE_PRICE = 100.0
@@ -435,6 +438,44 @@ async def update_config(payload: dict):
     r.publish('hivemind.events', json.dumps(event))
     return {"status": "success", "event": event}
 
+@app.post("/set_mode")
+async def set_mode(payload: dict):
+    mode = payload.get("mode", "macro")
+    r.set("hivemind:mode", mode)
+    event = {
+        "type": "system_config",
+        "config": {"mode": mode},
+        "sender": "System"
+    }
+    r.publish('hivemind.events', json.dumps(event))
+    return {"status": "success", "mode": mode}
+
+@app.get("/personas")
+def get_personas():
+    mode = r.get("hivemind:mode") or "macro"
+    if mode == "red_team":
+        try:
+            with open("agents/red_team_personas.json", "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    try:
+        with open("agents/personas.json", "r") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+@app.post("/inject_strategy")
+async def inject_strategy(payload: dict):
+    strategy = payload.get("strategy", "")
+    event = {
+        "type": "world_event",
+        "content": f"[STRATEGY PROPOSAL]: {strategy}",
+        "sender": "User-RedTeam"
+    }
+    r.publish('hivemind.events', json.dumps(event))
+    return {"status": "success", "event": event}
+
 @app.get("/node_info/{node_id}")
 def get_node_info(node_id: str):
     ticker_map = {
@@ -479,7 +520,7 @@ def get_node_info(node_id: str):
 def get_sentiment():
     result = []
     
-    for name in AGENT_NAMES:
+    for name in get_agent_names():
         sent_key = f"hivemind:sentiment:{name}"
         timeline_key = f"hivemind:timeline:{name}"
         port_key = f"hivemind:portfolio:{name}"
@@ -596,6 +637,7 @@ def autopilot_status():
         "next_fire_at": autopilot_state["next_fire_at"],
         "last_event": autopilot_state["last_event"],
         "dynamic": autopilot_state.get("dynamic", False),
+        "mode": r.get("hivemind:mode") or "macro",
     }
 
 @app.get("/network_graph")
@@ -605,7 +647,7 @@ def network_graph():
     
     nodes.append({"id": "God-Mode", "name": "MACRO EVENT", "type": "System", "group": 0, "val": 6})
     
-    for name in AGENT_NAMES:
+    for name in get_agent_names():
         sent_key = f"hivemind:sentiment:{name}"
         influence = int(r.hget(sent_key, "influence_score") or 0)
         nodes.append({"id": name, "name": name, "type": "Person", "group": 1, "val": 4 + (influence * 0.5)})
@@ -614,6 +656,6 @@ def network_graph():
     companies = ['TechCorp', 'MacroBank', 'CryptoExchange', 'HedgeFundX', 'GovtTreasury']
     for c in companies:
         nodes.append({"id": c, "name": c, "type": "Company", "group": 2, "val": 2})
-        links.append({"source": random.choice(AGENT_NAMES), "target": c})
+        links.append({"source": random.choice(get_agent_names()), "target": c})
 
     return {"nodes": nodes, "links": links}
