@@ -37,6 +37,11 @@ const AGENT_FRAMEWORKS = {
   'The CEO':        'langchain',
   'The Crypto Maxi':'native',
   'The Doomer':     'langchain',
+  'The CFO':        'native',
+  'The Legal Officer': 'langchain',
+  'The Risk & Security Officer': 'native',
+  'The Competitor': 'langchain',
+  'The Customer Advocate': 'native',
 };
 
 // Agent → short label for avatar
@@ -47,6 +52,11 @@ const AGENT_INITIALS = {
   'The CEO':        'CEO',
   'The Crypto Maxi':'MAX',
   'The Doomer':     'DMR',
+  'The CFO':        'CFO',
+  'The Legal Officer': 'LGL',
+  'The Risk & Security Officer': 'RSK',
+  'The Competitor': 'CMP',
+  'The Customer Advocate': 'ADV',
 };
 
 // ── Default state before any debate happens ───────────────────────────────────
@@ -253,10 +263,16 @@ export default function SentimentDashboard({ messages }) {
       .catch(() => {});
   }, []);
 
-  // Real-time updates from WebSocket messages
   useEffect(() => {
     if (!messages || messages.length === 0) return;
     const last = messages[messages.length - 1];
+
+    if (last.type === 'system_config') {
+      fetch('/api/sentiment')
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setAgents(data); })
+        .catch(() => {});
+    }
 
     if (last.type === 'sentiment_update') {
       const { agent: agentName, emotion, influence_score } = last;

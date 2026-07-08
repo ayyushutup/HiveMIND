@@ -60,6 +60,7 @@ export default function GodInput({ onInject, messages }) {
   const [seed, setSeed]         = useState('');
   const [loading, setLoading]   = useState(false);
   const [maxRounds, setMaxRounds] = useState(12);
+  const [activeMode, setActiveMode] = useState('macro');
 
   // Autopilot state
   const [autopilot, setAutopilot]           = useState(false);
@@ -80,6 +81,7 @@ export default function GodInput({ onInject, messages }) {
         setInterval_(data.interval ?? 60);
         setLastEvent(data.last_event ?? '');
         setDynamic(data.dynamic ?? false);
+        setActiveMode(data.mode ?? 'macro');
         if (data.running && data.next_fire_at) {
           nextFireAtRef.current = data.next_fire_at * 1000; // convert to ms
           const secs = Math.max(0, Math.round((data.next_fire_at * 1000 - Date.now()) / 1000));
@@ -109,6 +111,12 @@ export default function GodInput({ onInject, messages }) {
       setLastEvent(last.event ?? '');
       setFirePulse(true);
       setTimeout(() => setFirePulse(false), 800);
+    }
+
+    if (last.type === 'system_config') {
+      if (last.config?.mode) {
+        setActiveMode(last.config.mode);
+      }
     }
   }, [messages]);
 
@@ -167,6 +175,19 @@ export default function GodInput({ onInject, messages }) {
     }
   }, [autopilot, interval]);
 
+  const handleModeChange = async (newMode) => {
+    setActiveMode(newMode);
+    try {
+      await fetch('/api/set_mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newMode })
+      });
+    } catch (err) {
+      console.error("Failed to set mode:", err);
+    }
+  };
+
   // ── Manual injection ──────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -179,7 +200,20 @@ export default function GodInput({ onInject, messages }) {
         body: JSON.stringify({ max_rounds: maxRounds })
       });
     } catch {}
-    await onInject(seed);
+
+    if (activeMode === 'red_team') {
+      try {
+        await fetch('/api/inject_strategy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ strategy: seed })
+        });
+      } catch (err) {
+        console.error("Strategy injection failed:", err);
+      }
+    } else {
+      await onInject(seed);
+    }
     setSeed('');
     setLoading(false);
   };
@@ -205,78 +239,93 @@ export default function GodInput({ onInject, messages }) {
         <div>
           <AnimatePresence mode="wait">
             <motion.div
-              key={autopilot ? 'auto' : 'manual'}
+              key={activeMode === 'red_team' ? 'redteam' : (autopilot ? 'auto' : 'manual')}
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
               className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block border"
-              style={autopilot
-                ? { backgroundColor: 'rgba(0,240,255,0.1)', color: 'var(--color-brand-cyan)', borderColor: 'rgba(0,240,255,0.3)' }
-                : { backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.1)' }
+              style={activeMode === 'red_team'
+                ? { backgroundColor: 'rgba(189,0,255,0.1)', color: 'var(--color-brand-purple)', borderColor: 'rgba(189,0,255,0.3)' }
+                : autopilot
+                  ? { backgroundColor: 'rgba(0,240,255,0.1)', color: 'var(--color-brand-cyan)', borderColor: 'rgba(0,240,255,0.3)' }
+                  : { backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.1)' }
               }
             >
-              {autopilot ? '● Autopilot Active' : 'Control Panel'}
+              {activeMode === 'red_team' ? '🛡️ Risk Stress-Testing' : (autopilot ? '● Autopilot Active' : 'Control Panel')}
             </motion.div>
           </AnimatePresence>
-          <h2 className="text-2xl font-bold text-white leading-tight drop-shadow-md">SIMULATION</h2>
+          <h2 className="text-2xl font-bold text-white leading-tight drop-shadow-md">
+            {activeMode === 'red_team' ? 'RED TEAMING' : 'SIMULATION'}
+          </h2>
         </div>
         <Zap className="w-6 h-6 text-white/30" />
       </div>
 
-      {/* ── AUTOPILOT SECTION ── */}
-      <div
-        className="rounded-2xl border p-4 flex flex-col gap-4"
-        style={{
-          borderColor: autopilot ? '#38b2ac33' : 'rgba(255,255,255,0.06)',
-          backgroundColor: 'rgba(0,0,0,0.2)',
-        }}
-      >
-        {/* Top row: ring + controls */}
-        <div className="flex items-center gap-4">
-          {/* Countdown ring */}
-          <CountdownRing
-            secondsRemaining={secondsLeft}
-            interval={interval}
-            isRunning={autopilot}
-          />
+      {/* Mode Selector */}
+      <div className="flex border border-white/10 rounded-2xl p-1 bg-black/20">
+        <button
+          type="button"
+          onClick={() => handleModeChange("macro")}
+          className={`flex-1 text-center py-2 text-xs font-bold rounded-xl transition-all ${activeMode === "macro" ? "bg-white/10 text-white shadow-md border border-white/10" : "text-white/40 hover:text-white/70"}`}
+        >
+          Macro Sandbox
+        </button>
+        <button
+          type="button"
+          onClick={() => handleModeChange("red_team")}
+          className={`flex-1 text-center py-2 text-xs font-bold rounded-xl transition-all ${activeMode === "red_team" ? "bg-[var(--color-brand-purple)]/20 text-white shadow-md border border-[var(--color-brand-purple)]/30" : "text-white/40 hover:text-white/70"}`}
+        >
+          Corporate Red-Teaming
+        </button>
+      </div>
 
-          {/* Right side: play/pause + interval */}
-          <div className="flex-1 flex flex-col gap-3">
-            {/* Play/Pause button */}
-            <motion.button
-              type="button"
-              onClick={toggleAutopilot}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center gap-2 font-bold py-2.5 px-5 rounded-full border transition-all text-sm"
-              style={autopilot
-                ? { backgroundColor: 'rgba(0,240,255,0.15)', borderColor: 'rgba(0,240,255,0.4)', color: 'var(--color-brand-cyan)', boxShadow: '0 0 20px rgba(0,240,255,0.3)' }
-                : { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }
-              }
-            >
-              {autopilot
-                ? <><Pause className="w-4 h-4" /> Pause Autopilot</>
-                : <><Play className="w-4 h-4" /> Start Autopilot</>
-              }
-            </motion.button>
+      {activeMode === 'macro' ? (
+        /* ── AUTOPILOT SECTION ── */
+        <div
+          className="rounded-2xl border p-4 flex flex-col gap-4"
+          style={{
+            borderColor: autopilot ? '#38b2ac33' : 'rgba(255,255,255,0.06)',
+            backgroundColor: 'rgba(0,0,0,0.2)',
+          }}
+        >
+          {/* Top row: ring + controls */}
+          <div className="flex items-center gap-4">
+            <CountdownRing
+              secondsRemaining={secondsLeft}
+              interval={interval}
+              isRunning={autopilot}
+            />
 
-            {/* Interval slider */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-white/40 text-xs whitespace-nowrap">Every</span>
+            <div className="flex-1 flex flex-col gap-3">
+              <motion.button
+                type="button"
+                onClick={toggleAutopilot}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center justify-center gap-2 font-bold py-2.5 px-5 rounded-full border transition-all text-sm"
+                style={autopilot
+                  ? { backgroundColor: 'transparent', color: '#ff0055', borderColor: '#ff005544' }
+                  : { backgroundColor: 'var(--color-brand-cyan)', color: 'black', borderColor: 'transparent' }
+                }
+              >
+                {autopilot ? (
+                  <><Pause className="w-4 h-4 fill-current" />Pause Autopilot</>
+                ) : (
+                  <><Play className="w-4 h-4 fill-current" />Start Autopilot</>
+                )}
+              </motion.button>
+
+              <div className="flex items-center justify-between gap-3 px-1">
+                <span className="text-white/40 text-xs whitespace-nowrap">Frequency (seconds)</span>
                 <input
-                  type="range"
-                  min={10} max={180} step={5}
+                  type="range" min="10" max="300" step="10"
                   value={interval}
-                  onChange={e => setInterval_(Number(e.target.value))}
-                  onPointerUp={e => handleIntervalChange(Number(e.target.value))}
-                  className="flex-1 accent-[var(--color-brand-cyan)]"
+                  disabled={autopilot}
+                  onChange={e => handleIntervalChange(Number(e.target.value))}
+                  className="w-full accent-cyan-400 opacity-80 disabled:opacity-30"
                 />
-                <span className="font-mono font-bold text-sm w-10 text-right text-[var(--color-brand-cyan)]">
-                  {interval}s
-                </span>
+                <span className="font-mono text-xs text-white/60 w-8 text-right">{interval}s</span>
               </div>
-              
-              {/* Dynamic mode toggle */}
+
               <div className="flex items-center justify-between gap-3 px-1">
                 <span className="text-white/40 text-xs whitespace-nowrap">Dynamic Events (LLM)</span>
                 <button 
@@ -289,42 +338,51 @@ export default function GodInput({ onInject, messages }) {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Last event pill */}
-        <AnimatePresence mode="wait">
-          {lastEvent ? (
-            <motion.div
-              key={lastEvent.slice(0, 20)}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="text-xs rounded-xl px-3 py-2 border leading-relaxed"
-              style={{
-                backgroundColor: 'rgba(0,240,255,0.08)',
-                borderColor: 'rgba(0,240,255,0.3)',
-                color: 'rgba(255,255,255,0.7)',
-              }}
-            >
-              <span className="font-bold uppercase tracking-wider text-[var(--color-brand-cyan)] mr-2">Last:</span>
-              {lastEvent.length > 90 ? lastEvent.slice(0, 87) + '…' : lastEvent}
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-xs text-white/20 text-center py-1"
-            >
-              No events fired yet
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          <AnimatePresence mode="wait">
+            {lastEvent ? (
+              <motion.div
+                key={lastEvent.slice(0, 20)}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-xs rounded-xl px-3 py-2 border leading-relaxed"
+                style={{
+                  backgroundColor: 'rgba(0,240,255,0.08)',
+                  borderColor: 'rgba(0,240,255,0.3)',
+                  color: 'rgba(255,255,255,0.7)',
+                }}
+              >
+                <span className="font-bold uppercase tracking-wider text-[var(--color-brand-cyan)] mr-2">Last:</span>
+                {lastEvent.length > 90 ? lastEvent.slice(0, 87) + '…' : lastEvent}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-white/20 text-center py-1"
+              >
+                No events fired yet
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : (
+        /* ── RED-TEAMING EXPLANATION ── */
+        <div className="rounded-2xl border border-[var(--color-brand-purple)]/20 p-4 bg-purple-950/10 flex flex-col gap-2">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand-purple)]">🛡️ AI Red-Teaming Mode</h3>
+          <p className="text-xs text-white/60 leading-relaxed">
+            Submit a strategy, product idea, or corporate change. The corporate stakeholders (CFO, Legal Officer, Risk CISO, Competitor, Advocate) will debate to identify risks and potential points of failure.
+          </p>
+        </div>
+      )}
 
       {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-white/10" />
-        <span className="text-white/25 text-xs uppercase tracking-widest">or inject manually</span>
+        <span className="text-white/25 text-xs uppercase tracking-widest">
+          {activeMode === 'red_team' ? 'submit strategy proposal' : 'or inject manually'}
+        </span>
         <div className="flex-1 h-px bg-white/10" />
       </div>
 
@@ -350,7 +408,9 @@ export default function GodInput({ onInject, messages }) {
         <textarea
           value={seed}
           onChange={e => setSeed(e.target.value)}
-          placeholder="Inject world event (e.g. The Fed hikes rates by 75bps...)"
+          placeholder={activeMode === 'red_team' 
+            ? "e.g. We plan to migrate all corporate codebases to a new hosting provider to cut infrastructure costs by 30%..."
+            : "Inject world event (e.g. The Fed hikes rates by 75bps...)"}
           className="w-full bg-black/40 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-[var(--color-brand-purple)]/50 focus:bg-black/60 focus:ring-1 focus:ring-[var(--color-brand-purple)]/30 transition-all resize-none h-24 rounded-2xl p-4 text-sm font-medium shadow-inner"
         />
 
@@ -361,7 +421,7 @@ export default function GodInput({ onInject, messages }) {
           whileTap={{ scale: 0.98 }}
           className="bg-gradient-to-r from-[var(--color-brand-cyan)]/20 to-[var(--color-brand-purple)]/20 hover:from-[var(--color-brand-cyan)]/30 hover:to-[var(--color-brand-purple)]/30 border border-white/10 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_var(--color-brand-purple)] disabled:opacity-40 disabled:pointer-events-none backdrop-blur-md text-sm group"
         >
-          {loading ? 'Initializing...' : 'Run Simulation'}
+          {loading ? 'Initializing...' : (activeMode === 'red_team' ? 'Execute Red-Teaming' : 'Run Simulation')}
           <Send className="w-4 h-4 ml-2" />
         </motion.button>
       </form>
