@@ -3,7 +3,7 @@ import json
 import threading
 import time
 import random
-from agent import NativeGroqAgent, LangChainAgent, _redis_client
+from swarm_agent import NativeGroqAgent, LangChainAgent, _redis_client
 from moderator import Moderator
 
 r = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
@@ -13,10 +13,16 @@ swarm_state = {"silenced": False}
 
 # Load personas
 with open("agents/personas.json", "r") as f:
-    persona_data = json.load(f)
+    macro_personas = json.load(f)
+
+with open("agents/red_team_personas.json", "r") as f:
+    red_team_personas = json.load(f)
+
+macro_names = [p["name"] for p in macro_personas]
+red_team_names = [p["name"] for p in red_team_personas]
 
 agents = []
-for p in persona_data:
+for p in macro_personas + red_team_personas:
     if p.get("framework") == "langchain":
         agents.append(LangChainAgent(p["name"], p["role_description"]))
     else:
@@ -43,6 +49,14 @@ def listen_and_react(agent):
             if swarm_state["silenced"]:
                 continue
                 
+            active_mode = r.get("hivemind:mode") or "macro"
+            if active_mode == "red_team":
+                if agent.name not in red_team_names:
+                    continue
+            else:
+                if agent.name not in macro_names:
+                    continue
+                
             # Manage history
             if data.get("type") in ["world_event", "agent_speech"]:
                 agent_history.append(data)
@@ -63,12 +77,21 @@ def listen_and_react(agent):
             try:
                 # Format history for prompt
                 history_str = "\n".join([f"[{m.get('sender', 'World')}]: {m.get('content', '')}" for m in agent_history])
-                prompt = (
-                    f"Recent events:\n{history_str}\n\n"
-                    "You must now respond to the situation. Remember your persona. "
-                    "CRITICAL DEBATE RULE: If another agent has spoken and you disagree with their perspective, you MUST call them out by name and directly rebut their logic. "
-                    "If you agree with them, mention them by name and build upon their argument. Make this a structured, fiery debate!"
-                )
+                if active_mode == "red_team":
+                    prompt = (
+                        f"Recent discussion on the strategy:\n{history_str}\n\n"
+                        "You must now evaluate the proposed strategy from the perspective of your role. Remember your corporate persona. "
+                        "Identify risks, flaws, or operational/cost/legal issues, or advocate for it if it benefits your area. "
+                        "CRITICAL DEBATE RULE: You must call out other stakeholders by name, build on their points if you agree, or directly challenge their logic if you disagree. "
+                        "Make this a sharp, professional corporate red-teaming debate!"
+                    )
+                else:
+                    prompt = (
+                        f"Recent events:\n{history_str}\n\n"
+                        "You must now respond to the situation. Remember your persona. "
+                        "CRITICAL DEBATE RULE: If another agent has spoken and you disagree with their perspective, you MUST call them out by name and directly rebut their logic. "
+                        "If you agree with them, mention them by name and build upon their argument. Make this a structured, fiery debate!"
+                    )
                 
                 raw_response = agent.think(prompt)
                 parsed_response = json.loads(raw_response)

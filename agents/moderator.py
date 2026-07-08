@@ -1,6 +1,9 @@
 import redis
 import json
 import re
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from agent import Agent
 
 class Moderator:
@@ -52,7 +55,17 @@ class Moderator:
                         print(f"[Moderator] Max rounds ({self.max_rounds}) reached. Evaluating debate winner...")
                         
                         history_text = "\n".join(self.history)
-                        prompt = f"Here is the debate transcript:\n{history_text}\n\nWho won? Return only the JSON object."
+                        active_mode = self.r.get("hivemind:mode") or "macro"
+                        if active_mode == "red_team":
+                            prompt = (
+                                f"Here is the strategy stress-testing debate transcript:\n{history_text}\n\n"
+                                "As the Moderator, read the debate and determine the final consensus. "
+                                "Is the strategy approved or rejected? Who made the most compelling case (the winner)? "
+                                "Respond strictly with a JSON object:\n"
+                                '{"winner": "AgentName", "reason": "1 short sentence explaining if the strategy was approved or rejected and why.", "winning_sentiment": "approved or rejected", "asset": "STRATEGY"}'
+                            )
+                        else:
+                            prompt = f"Here is the debate transcript:\n{history_text}\n\nWho won? Return only the JSON object."
                         
                         try:
                             reply = self.judge.think(prompt)
