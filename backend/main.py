@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import redis
 import asyncio
@@ -6,6 +7,7 @@ import json
 import time
 import random
 import yfinance as yf
+from . import db as history_db
 
 app = FastAPI()
 
@@ -210,6 +212,10 @@ autopilot_state = {
     "dynamic": False,        # whether to use LLM for events
 }
 
+# ── History session state ─────────────────────────────────────────────────────
+# Tracks the active SQLite session across the async Redis listener.
+_active_session_id: int | None = None
+
 async def autopilot_loop():
     """Async loop that fires world events at the configured interval."""
     print("[Autopilot] Loop started.")
@@ -332,6 +338,7 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
 
 async def redis_listener():
+    global _active_session_id
     pubsub = r.pubsub()
     pubsub.subscribe('hivemind.events')
     print("FastAPI Backend listening to Redis 'hivemind.events'...")
@@ -351,6 +358,29 @@ async def redis_listener():
                         "time": time.strftime("%H:%M:%S"),
                     }
                     await manager.broadcast(market_reset_event)
+
+                    # ── History hook 1: open a new session ────────────────
+                    mode = r.get("hivemind:mode") or "macro"
+                    _active_session_id = await asyncio.to_thread(
+                        history_db.start_session,
+                        parsed.get("content", ""),
+                        mode,
+                    )
+                    # ──────────────────────────────────────────────────────
+
+                elif parsed.get("type") == "agent_speech":
+                    # ── History hook 2: persist each speech ───────────────
+                    if _active_session_id is not None:
+                        await asyncio.to_thread(
+                            history_db.record_speech,
+                            _active_session_id,
+                            parsed.get("sender", ""),
+                            parsed.get("content", ""),
+                            parsed.get("thought", ""),
+                            parsed.get("emotion", "neutral"),
+                            parsed.get("asset_focus", "MACRO"),
+                        )
+                    # ──────────────────────────────────────────────────────
 
                 elif parsed.get("type") == "sentiment_update":
                     agent_name = parsed.get("agent", "")
@@ -375,6 +405,7 @@ async def redis_listener():
                         "time": time.strftime("%H:%M:%S"),
                     }
                     await manager.broadcast(market_tick_event)
+
                 elif parsed.get("type") == "debate_conclusion":
                     winner = parsed.get("winner", "")
                     sentiment = parsed.get("sentiment", "neutral")
@@ -403,16 +434,42 @@ async def redis_listener():
                             "time": time.strftime("%H:%M:%S"),
                         }
                         await manager.broadcast(market_tick_event)
+
+                    # ── History hook 3: close the session ─────────────────
+                    if _active_session_id is not None:
+                        market_final = {
+                            a: {
+                                "price": get_current_price(a),
+                                "pct_change": round(
+                                    ((get_current_price(a) - BASE_PRICE) / BASE_PRICE) * 100, 2
+                                ),
+                            }
+                            for a in ASSETS
+                        }
+                        agent_final = get_sentiment()
+                        closed_id = _active_session_id
+                        _active_session_id = None
+                        await asyncio.to_thread(
+                            history_db.end_session,
+                            closed_id,
+                            winner if winner and winner != "No One" else None,
+                            market_final,
+                            agent_final,
+                        )
+                    # ──────────────────────────────────────────────────────
+
                 # ─────────────────────────────────────────────────────────
 
                 await manager.broadcast(parsed)
 
-            except Exception:
-                pass
+            except Exception as exc:
+                import traceback
+                traceback.print_exc()
         await asyncio.sleep(0.1)
 
 @app.on_event("startup")
 async def startup_event():
+    history_db.init_db()
     asyncio.create_task(redis_listener())
 
 # ── Existing endpoints ────────────────────────────────────────────────────────
@@ -659,3 +716,31 @@ def network_graph():
         links.append({"source": random.choice(get_agent_names()), "target": c})
 
     return {"nodes": nodes, "links": links}
+
+
+# ── History endpoints ──────────────────────────────────────────────────────────
+
+@app.get("/history")
+def list_history(limit: int = 50):
+    """
+    Return a paginated list of past debate sessions, most recent first.
+
+    Query params:
+        limit (int): Max sessions to return (default 50, max 200).
+    """
+    limit = max(1, min(limit, 200))
+    sessions = history_db.get_sessions(limit=limit)
+    return sessions
+
+
+@app.get("/history/{session_id}")
+def get_history_session(session_id: int):
+    """
+    Return full replay data for a single debate session.
+
+    Returns 404 if the session_id does not exist.
+    """
+    detail = history_db.get_session_detail(session_id)
+    if detail is None:
+        return JSONResponse(status_code=404, content={"error": f"Session {session_id} not found"})
+    return detail
